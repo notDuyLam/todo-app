@@ -7,9 +7,20 @@ type TodoList = {
   todos: Todo[];
   onToggleComplete: (id: number) => void;
   onDelete: (id: number) => void;
+  onEdit: (
+    id: number,
+    newText: string,
+    dueDate?: Date,
+    isComplete?: boolean
+  ) => void;
 };
 
-const TodoListCom = ({ todos, onToggleComplete, onDelete }: TodoList) => {
+const TodoListCom = ({
+  todos,
+  onToggleComplete,
+  onDelete,
+  onEdit,
+}: TodoList) => {
   return (
     <Card className="w-full shadow-sm">
       <CardHeader className="pb-3">
@@ -30,6 +41,7 @@ const TodoListCom = ({ todos, onToggleComplete, onDelete }: TodoList) => {
                   todo={todo}
                   onCheck={onToggleComplete}
                   onDelete={onDelete}
+                  onEdit={onEdit}
                 />
               ))}
             </ul>

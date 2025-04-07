@@ -41,10 +41,22 @@ function App() {
     setTodos(todos.filter((todo) => todo.id !== id));
   }
 
-  function handleEdit(id: number, newText: string) {
+  function handleEdit(
+    id: number,
+    newText: string,
+    dueDate?: Date,
+    isComplete?: boolean
+  ) {
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
-        todo.id === id ? { ...todo, text: newText } : todo
+        todo.id === id
+          ? {
+              ...todo,
+              text: newText,
+              ...(dueDate !== undefined && { due: dueDate }),
+              ...(isComplete !== undefined && { completed: isComplete }),
+            }
+          : todo
       )
     );
   }
@@ -65,6 +77,7 @@ function App() {
             todos={todos}
             onToggleComplete={handleToggleComplete}
             onDelete={handleDeleteTodo}
+            onEdit={handleEdit}
           />
         </div>
       </div>
