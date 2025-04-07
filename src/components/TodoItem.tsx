@@ -45,7 +45,7 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
             className="h-5 w-5 rounded-md"
           />
           <div
-            className={`flex-1 text-lg transition-all ${
+            className={`flex-1 text-md transition-all ${
               todo.completed ? "text-gray-400 line-through" : ""
             }`}
           >

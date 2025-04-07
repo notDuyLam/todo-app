@@ -5,6 +5,7 @@ import { ScrollArea } from "./ui/scroll-area";
 
 type TodoList = {
   todos: Todo[];
+  filter: string;
   onToggleComplete: (id: number) => void;
   onDelete: (id: number) => void;
   onEdit: (
@@ -17,6 +18,7 @@ type TodoList = {
 
 const TodoListCom = ({
   todos,
+  filter,
   onToggleComplete,
   onDelete,
   onEdit,
@@ -35,15 +37,22 @@ const TodoListCom = ({
             </div>
           ) : (
             <ul className="w-full space-y-3">
-              {todos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onCheck={onToggleComplete}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                />
-              ))}
+              {todos
+                .filter((todo) => {
+                  if (filter === "all") return true;
+                  if (filter === "active") return !todo.completed;
+                  if (filter === "completed") return todo.completed;
+                  return true;
+                })
+                .map((todo) => (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onCheck={onToggleComplete}
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                  />
+                ))}
             </ul>
           )}
         </ScrollArea>
