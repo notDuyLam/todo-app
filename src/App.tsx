@@ -10,7 +10,8 @@ function App() {
   const [todos, setTodos] = useState<Todo[]>([
     {
       id: 1,
-      text: "Học React",
+      text: "Learn React",
+      description: "This is a prototype task!",
       due: new Date("2024-04-13"),
       completed: false,
     },
@@ -49,7 +50,7 @@ function App() {
       id: todos.length + 1,
       text: inputText,
       completed: false,
-      due: dueDate || new Date(),
+      due: dueDate,
     };
     setTodos([...todos, newTodo]);
   }

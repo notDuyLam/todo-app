@@ -11,6 +11,7 @@ import { Calendar } from "./ui/calendar";
 export type Todo = {
   id: number;
   text: string;
+  description?: string;
   due?: Date;
   completed: boolean;
 };
