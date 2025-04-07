@@ -28,6 +28,7 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
   const [editText, setEditText] = useState(todo.text);
   const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
   const [editCompleted, setEditCompleted] = useState(todo.completed);
+  const [editDes, setEditDes] = useState(todo.description);
 
   const handleSave = () => {
     if (onEdit) {
@@ -53,7 +54,32 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
             {todo.text}
           </div>
         </div>
-
+        {todo.description && (
+          <Badge
+            variant="secondary"
+            className="p-2 text-xs gap-1 items-center flex"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="feather feather-file-text"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span>Note</span>
+          </Badge>
+        )}
         <div className="flex items-center gap-3">
           {todo.due && (
             <Badge variant="outline" className="flex gap-1 items-center">
@@ -71,13 +97,39 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
             <PopoverContent className="w-80 p-4" sideOffset={5}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium leading-none">Edit Task</h4>
-                  <Input
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    className="w-full"
-                    id="edit-task"
-                  />
+                  <h4 className="font-medium leading-none text-lg">
+                    Edit Task
+                  </h4>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="edit-task"
+                      className="text-sm font-medium text-muted-foreground"
+                    >
+                      Title
+                    </label>
+                    <Input
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="w-full"
+                      id="edit-task"
+                      placeholder="Enter task title"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="edit-des"
+                      className="text-sm font-medium text-muted-foreground"
+                    >
+                      Description
+                    </label>
+                    <Input
+                      value={editDes}
+                      onChange={(e) => setEditDes(e.target.value)}
+                      className="w-full"
+                      id="edit-des"
+                      placeholder="Enter task description"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
