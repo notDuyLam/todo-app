@@ -7,6 +7,8 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { Input } from "./ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export type Todo = {
   id: number;
@@ -29,6 +31,13 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
   const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
   const [editCompleted, setEditCompleted] = useState(todo.completed);
   const [editDes, setEditDes] = useState(todo.description);
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: todo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const handleSave = () => {
     if (onEdit) {
@@ -38,7 +47,13 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
   };
 
   return (
-    <Card className="mb-3 shadow-sm hover:shadow-md transition-all">
+    <Card
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="mb-3 shadow-sm hover:shadow-md transition-all cursor-move"
+    >
       <CardContent className="p-4 flex items-center justify-between gap-x-4">
         <div className="flex items-center gap-3 flex-1">
           <Checkbox

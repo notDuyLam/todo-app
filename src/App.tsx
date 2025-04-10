@@ -164,6 +164,7 @@ function App() {
                 onToggleComplete={handleToggleComplete}
                 onDelete={handleDeleteTodo}
                 onEdit={handleEdit}
+                setTodos={setTodos}
               />
             </>
           ) : (
