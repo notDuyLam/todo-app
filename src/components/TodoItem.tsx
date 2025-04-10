@@ -41,7 +41,7 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
 
   const handleSave = () => {
     if (onEdit) {
-      onEdit(todo.id, editText, editDue, editCompleted);
+      onEdit(todo.id, editText, editDue, todo.completed);
     }
     setOpen(false);
   };
@@ -185,10 +185,8 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="completed"
-                        checked={editCompleted}
-                        onCheckedChange={(checked) =>
-                          setEditCompleted(checked === true)
-                        }
+                        checked={todo.completed}
+                        onCheckedChange={() => onCheck(todo.id)}
                       />
                       <label
                         htmlFor="completed"
