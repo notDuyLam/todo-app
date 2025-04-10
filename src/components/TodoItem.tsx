@@ -29,7 +29,6 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
   const [open, setOpen] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
-  const [editCompleted, setEditCompleted] = useState(todo.completed);
   const [editDes, setEditDes] = useState(todo.description);
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: todo.id });

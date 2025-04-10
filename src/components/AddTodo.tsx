@@ -9,22 +9,29 @@ import { format } from "date-fns";
 import { cn } from "../lib/utils";
 
 type AddTodo = {
-  onAddTodo: (text: string, dueDate?: Date) => void;
+  onAddTodo: (text: string, dueDate?: Date, description?: string) => void;
 };
 
 const AddTodoObject = ({ onAddTodo }: AddTodo) => {
   const [text, setText] = useState("");
+  const [des, setDes] = useState("");
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [addDesOpen, setAddDesOpen] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
+  };
+
+  const handleChangeDescription = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDes(e.target.value);
   };
 
   const handleAdd = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (text.trim() !== "") {
-      onAddTodo(text, date);
+      onAddTodo(text, date, des);
       setText("");
+      setDes("");
       setDate(undefined);
     }
   };
@@ -39,7 +46,7 @@ const AddTodoObject = ({ onAddTodo }: AddTodo) => {
               className="flex-1 focus:border-primary focus:ring-1 focus:ring-primary"
               type="text"
               value={text}
-              onChange={handleChange}
+              onChange={handleChangeTitle}
             />
             <Button
               type="submit"
@@ -87,6 +94,30 @@ const AddTodoObject = ({ onAddTodo }: AddTodo) => {
                 Clear
               </Button>
             )}
+          </div>
+          <div className="flex items-center">
+            <Popover open={addDesOpen} onOpenChange={setAddDesOpen}>
+              <PopoverTrigger asChild>
+                <Button>Add description</Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="w-full space-y-2">
+                  <h1 className="font-bold">Description</h1>
+                  <Input
+                    placeholder="Add description"
+                    className="flex-1 focus:border-primary focus:ring-1 focus:ring-primary"
+                    type="text"
+                    value={des}
+                    onChange={handleChangeDescription}
+                  />
+                  <div className="flex justify-end space-x-3">
+                    <Button className="" onClick={() => setAddDesOpen(false)}>
+                      OK
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </form>
       </CardContent>

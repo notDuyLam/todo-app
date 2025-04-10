@@ -45,12 +45,13 @@ function App() {
     }, 300);
   };
 
-  function handleAddTodo(inputText: string, dueDate?: Date) {
+  function handleAddTodo(inputText: string, dueDate?: Date, des?: string) {
     const newTodo: Todo = {
       id: todos.length + 1,
       text: inputText,
       completed: false,
       due: dueDate,
+      description: des,
     };
     setTodos([...todos, newTodo]);
   }
