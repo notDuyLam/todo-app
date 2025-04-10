@@ -89,107 +89,116 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
           )}
 
           <Popover open={open} onOpenChange={setOpen}>
+            {open && (
+              <div className="fixed inset-0 bg-gray-400/40 backdrop-blur-sm z-40"></div>
+            )}
             <PopoverTrigger asChild>
               <Button className="edit-btn" size="sm">
                 Edit
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-4" sideOffset={5}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium leading-none text-lg">
-                    Edit Task
-                  </h4>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="edit-task"
-                      className="text-sm font-medium text-muted-foreground"
-                    >
-                      Title
-                    </label>
-                    <Input
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      className="w-full"
-                      id="edit-task"
-                      placeholder="Enter task title"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="edit-des"
-                      className="text-sm font-medium text-muted-foreground"
-                    >
-                      Description
-                    </label>
-                    <Input
-                      value={editDes}
-                      onChange={(e) => setEditDes(e.target.value)}
-                      className="w-full"
-                      id="edit-des"
-                      placeholder="Enter task description"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-medium leading-none text-sm">Due Date</h4>
-                  <div className="flex items-center">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                          size="sm"
+            {open && (
+              <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="w-[90%] max-w-2xl p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none text-xl">
+                        Edit Task
+                      </h4>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="edit-task"
+                          className="text-sm font-medium text-muted-foreground"
                         >
-                          <CalendarIcon className="mr-2 h-3 w-3" />
-                          {editDue
-                            ? editDue.toLocaleDateString()
-                            : "Add due date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={editDue}
-                          onSelect={setEditDue}
-                          initialFocus
+                          Title
+                        </label>
+                        <Input
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="w-full"
+                          id="edit-task"
+                          placeholder="Enter task title"
                         />
-                      </PopoverContent>
-                    </Popover>
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor="edit-des"
+                          className="text-sm font-medium text-muted-foreground"
+                        >
+                          Description
+                        </label>
+                        <Input
+                          value={editDes}
+                          onChange={(e) => setEditDes(e.target.value)}
+                          className="w-full"
+                          id="edit-des"
+                          placeholder="Enter task description"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-medium leading-none text-sm">
+                        Due Date
+                      </h4>
+                      <div className="flex items-center">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                              size="sm"
+                            >
+                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              {editDue
+                                ? editDue.toLocaleDateString()
+                                : "Add due date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={editDue}
+                              onSelect={setEditDue}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="completed"
+                        checked={editCompleted}
+                        onCheckedChange={(checked) =>
+                          setEditCompleted(checked === true)
+                        }
+                      />
+                      <label
+                        htmlFor="completed"
+                        className="text-sm font-medium leading-none cursor-pointer"
+                      >
+                        Mark as completed
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        onClick={() => setOpen(false)}
+                        className="mr-2"
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                      <Button className="bg-primary" onClick={handleSave}>
+                        Save Changes
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="completed"
-                    checked={editCompleted}
-                    onCheckedChange={(checked) =>
-                      setEditCompleted(checked === true)
-                    }
-                  />
-                  <label
-                    htmlFor="completed"
-                    className="text-sm font-medium leading-none cursor-pointer"
-                  >
-                    Mark as completed
-                  </label>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <Button
-                    onClick={() => setOpen(false)}
-                    className="mr-2"
-                    variant="outline"
-                  >
-                    Cancel
-                  </Button>
-                  <Button className="bg-primary" onClick={handleSave}>
-                    Save Changes
-                  </Button>
                 </div>
               </div>
-            </PopoverContent>
+            )}
           </Popover>
 
           <Button
