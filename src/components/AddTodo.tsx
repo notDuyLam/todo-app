@@ -110,9 +110,23 @@ const AddTodoObject = ({ onAddTodo }: AddTodo) => {
                     value={des}
                     onChange={handleChangeDescription}
                   />
-                  <div className="flex justify-end space-x-3">
-                    <Button className="" onClick={() => setAddDesOpen(false)}>
-                      OK
+                  <div className="flex justify-end space-x-2 mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setAddDesOpen(false)}
+                      className="hover:bg-gray-100 transition-colors"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        setAddDesOpen(false);
+                      }}
+                      className="transition-all hover:shadow-md"
+                    >
+                      Save
                     </Button>
                   </div>
                 </div>

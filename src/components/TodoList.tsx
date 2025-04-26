@@ -1,3 +1,4 @@
+import { useState } from "react";
 import TodoItem from "./TodoItem";
 import { Todo } from "./TodoItem";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -15,10 +16,12 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { Button } from "./ui/button";
 
 type TodoList = {
   todos: Todo[];
   filter: string;
+  completedCounts: number;
   onToggleComplete: (id: number) => void;
   onDelete: (id: number) => void;
   onEdit: (
@@ -33,6 +36,7 @@ type TodoList = {
 const TodoListCom = ({
   todos,
   filter,
+  completedCounts,
   onToggleComplete,
   onDelete,
   onEdit,
@@ -46,6 +50,8 @@ const TodoListCom = ({
     })
   );
 
+  const [showCompleted, setShowCompleted] = useState(false);
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (active.id !== over.id) {
@@ -55,6 +61,13 @@ const TodoListCom = ({
       setTodos(newTodos);
     }
   };
+
+  const sortedTodos = [...todos].sort((a, b) => {
+    if (a.completed === b.completed) return 0; // Keep original order if both are the same
+    return a.completed ? 1 : -1; // Move completed tasks to the bottom
+  });
+
+  const completedTodos = todos.filter((todo) => todo.completed);
   return (
     <DndContext
       sensors={sensors}
@@ -64,6 +77,10 @@ const TodoListCom = ({
       <Card className="w-full shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl font-semibold">Your Tasks</CardTitle>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <span>Completed:</span>
+            <span className="font-medium">{completedCounts}</span>
+          </div>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[calc(100vh-280px)] pr-4">
@@ -74,11 +91,11 @@ const TodoListCom = ({
               </div>
             ) : (
               <SortableContext
-                items={todos.map((todo) => todo.id)}
+                items={sortedTodos.map((todo) => todo.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="w-full space-y-3">
-                  {todos
+                  {sortedTodos
                     .filter((todo) => {
                       if (filter === "all") return true;
                       if (filter === "active") return !todo.completed;
@@ -94,6 +111,52 @@ const TodoListCom = ({
                         onEdit={onEdit}
                       />
                     ))}
+                </ul>
+              </SortableContext>
+            )}
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      {/* Completed todos start here */}
+      <Card className="completed-todos w-full shadow-sm h-auto">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between w-full">
+            <CardTitle className="text-xl font-semibold">
+              Completed Tasks ({completedCounts})
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-2 "
+              onClick={() => setShowCompleted(!showCompleted)}
+            >
+              {showCompleted ? "▲" : "▼"}
+            </Button>
+          </div>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground"></div>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[calc(100vh-280px)] pr-4">
+            {todos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                <p>You have no completed tasks</p>
+              </div>
+            ) : (
+              <SortableContext
+                items={completedTodos.map((todo) => todo.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className="w-full space-y-3">
+                  {completedTodos.map((todo) => (
+                    <TodoItem
+                      key={todo.id}
+                      todo={todo}
+                      onCheck={onToggleComplete}
+                      onDelete={onDelete}
+                      onEdit={onEdit}
+                    />
+                  ))}
                 </ul>
               </SortableContext>
             )}

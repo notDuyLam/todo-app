@@ -29,6 +29,8 @@ function App() {
     localStorage.getItem("todo-theme") === "light" ? false : true
   );
 
+  const completedCount = todos.filter((todo) => todo.completed).length;
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("todo-theme", darkMode ? "dark" : "light");
@@ -162,6 +164,7 @@ function App() {
               <TodoListCom
                 todos={todos}
                 filter={filter}
+                completedCounts={completedCount}
                 onToggleComplete={handleToggleComplete}
                 onDelete={handleDeleteTodo}
                 onEdit={handleEdit}
