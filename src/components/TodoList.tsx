@@ -51,6 +51,7 @@ const TodoListCom = ({
   );
 
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isEditing, setEditing] = useState(false);
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
@@ -130,15 +131,24 @@ const TodoListCom = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto p-2 "
+              className="h-auto p-2 transition-transform duration-300"
               onClick={() => setShowCompleted(!showCompleted)}
             >
-              {showCompleted ? "▲" : "▼"}
+              <span
+                className={`transition-transform duration-300 ${
+                  showCompleted ? "rotate-180" : ""
+                }`}
+              >
+                ▼
+              </span>
             </Button>
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground"></div>
         </CardHeader>
-        {showCompleted && (
+        <div
+          className="overflow-hidden transition-all duration-300 ease-in-out"
+          style={{ maxHeight: showCompleted ? "1000px" : "0px" }}
+        >
           <CardContent>
             {completedTodos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
@@ -163,7 +173,7 @@ const TodoListCom = ({
               </SortableContext>
             )}
           </CardContent>
-        )}
+        </div>
       </Card>
     </>
   );
