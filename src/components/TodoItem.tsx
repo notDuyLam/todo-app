@@ -23,9 +23,16 @@ type TodoItemProps = {
   onCheck: (id: number) => void;
   onDelete: (id: number) => void;
   onEdit?: (id: number, text: string, due?: Date, completed?: boolean) => void;
+  setIsEditing: () => void;
 };
 
-const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
+const TodoItem = ({
+  todo,
+  onCheck,
+  onDelete,
+  onEdit,
+  setIsEditing,
+}: TodoItemProps) => {
   const [open, setOpen] = useState(false);
   const [editText, setEditText] = useState(todo.text);
   const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
@@ -107,7 +114,7 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
               <div className="fixed inset-0 bg-gray-400/40 backdrop-blur-sm z-40"></div>
             )}
             <PopoverTrigger asChild>
-              <Button className="edit-btn" size="sm">
+              <Button onClick={setIsEditing} className="edit-btn" size="sm">
                 Edit
               </Button>
             </PopoverTrigger>
@@ -197,13 +204,22 @@ const TodoItem = ({ todo, onCheck, onDelete, onEdit }: TodoItemProps) => {
 
                     <div className="flex justify-end pt-2">
                       <Button
-                        onClick={() => setOpen(false)}
+                        onClick={() => {
+                          setOpen(false);
+                          setIsEditing();
+                        }}
                         className="mr-2"
                         variant="outline"
                       >
                         Cancel
                       </Button>
-                      <Button className="bg-primary" onClick={handleSave}>
+                      <Button
+                        className="bg-primary"
+                        onClick={() => {
+                          handleSave();
+                          setIsEditing();
+                        }}
+                      >
                         Save Changes
                       </Button>
                     </div>

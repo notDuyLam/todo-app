@@ -53,6 +53,10 @@ const TodoListCom = ({
   const [showCompleted, setShowCompleted] = useState(false);
   const [isEditing, setEditing] = useState(false);
 
+  const handleSetEditing = () => {
+    setEditing(!isEditing);
+  };
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (active.id !== over.id) {
@@ -93,6 +97,7 @@ const TodoListCom = ({
                 </div>
               ) : (
                 <SortableContext
+                  disabled={isEditing}
                   items={sortedTodos.map((todo) => todo.id)}
                   strategy={verticalListSortingStrategy}
                 >
@@ -111,6 +116,7 @@ const TodoListCom = ({
                           onCheck={onToggleComplete}
                           onDelete={onDelete}
                           onEdit={onEdit}
+                          setIsEditing={handleSetEditing}
                         />
                       ))}
                   </ul>
@@ -156,6 +162,7 @@ const TodoListCom = ({
               </div>
             ) : (
               <SortableContext
+                disabled={isEditing}
                 items={completedTodos.map((todo) => todo.id)}
                 strategy={verticalListSortingStrategy}
               >
@@ -167,6 +174,7 @@ const TodoListCom = ({
                       onCheck={onToggleComplete}
                       onDelete={onDelete}
                       onEdit={onEdit}
+                      setIsEditing={handleSetEditing}
                     />
                   ))}
                 </ul>
