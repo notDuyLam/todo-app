@@ -69,54 +69,56 @@ const TodoListCom = ({
 
   const completedTodos = todos.filter((todo) => todo.completed);
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <Card className="w-full shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-semibold">Your Tasks</CardTitle>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>Completed:</span>
-            <span className="font-medium">{completedCounts}</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[calc(100vh-280px)] pr-4">
-            {todos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                <p>You have no tasks yet</p>
-                <p className="text-sm">Add one using the form above</p>
-              </div>
-            ) : (
-              <SortableContext
-                items={sortedTodos.map((todo) => todo.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <ul className="w-full space-y-3">
-                  {sortedTodos
-                    .filter((todo) => {
-                      if (filter === "all") return true;
-                      if (filter === "active") return !todo.completed;
-                      if (filter === "completed") return todo.completed;
-                      return true;
-                    })
-                    .map((todo) => (
-                      <TodoItem
-                        key={todo.id}
-                        todo={todo}
-                        onCheck={onToggleComplete}
-                        onDelete={onDelete}
-                        onEdit={onEdit}
-                      />
-                    ))}
-                </ul>
-              </SortableContext>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <Card className="w-full shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-xl font-semibold">Your Tasks</CardTitle>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <span>Completed:</span>
+              <span className="font-medium">{completedCounts}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[calc(100vh-280px)] pr-4">
+              {todos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                  <p>You have no tasks yet</p>
+                  <p className="text-sm">Add one using the form above</p>
+                </div>
+              ) : (
+                <SortableContext
+                  items={sortedTodos.map((todo) => todo.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="w-full space-y-3">
+                    {sortedTodos
+                      .filter((todo) => {
+                        if (filter === "all") return true;
+                        if (filter === "active") return !todo.completed;
+                        if (filter === "completed") return todo.completed;
+                        return true;
+                      })
+                      .map((todo) => (
+                        <TodoItem
+                          key={todo.id}
+                          todo={todo}
+                          onCheck={onToggleComplete}
+                          onDelete={onDelete}
+                          onEdit={onEdit}
+                        />
+                      ))}
+                  </ul>
+                </SortableContext>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </DndContext>
 
       {/* Completed todos start here */}
       <Card className="completed-todos w-full shadow-sm h-auto">
@@ -136,9 +138,9 @@ const TodoListCom = ({
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground"></div>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[calc(100vh-280px)] pr-4">
-            {todos.length === 0 ? (
+        {showCompleted && (
+          <CardContent>
+            {completedTodos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                 <p>You have no completed tasks</p>
               </div>
@@ -160,10 +162,10 @@ const TodoListCom = ({
                 </ul>
               </SortableContext>
             )}
-          </ScrollArea>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
-    </DndContext>
+    </>
   );
 };
 
