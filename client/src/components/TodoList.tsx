@@ -113,6 +113,7 @@ const TodoListCom = ({
                         <TodoItem
                           key={todo.id}
                           todo={todo}
+                          isEditing={isEditing}
                           onCheck={onToggleComplete}
                           onDelete={onDelete}
                           onEdit={onEdit}
@@ -171,6 +172,7 @@ const TodoListCom = ({
                     <TodoItem
                       key={todo.id}
                       todo={todo}
+                      isEditing={isEditing}
                       onCheck={onToggleComplete}
                       onDelete={onDelete}
                       onEdit={onEdit}

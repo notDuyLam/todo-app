@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { cn } from "../lib/utils";
 
 export type Todo = {
   id: number;
@@ -20,6 +21,7 @@ export type Todo = {
 
 type TodoItemProps = {
   todo: Todo;
+  isEditing: boolean;
   onCheck: (id: number) => void;
   onDelete: (id: number) => void;
   onEdit?: (id: number, text: string, due?: Date, completed?: boolean) => void;
@@ -28,6 +30,7 @@ type TodoItemProps = {
 
 const TodoItem = ({
   todo,
+  isEditing,
   onCheck,
   onDelete,
   onEdit,
@@ -119,7 +122,12 @@ const TodoItem = ({
               </Button>
             </PopoverTrigger>
             {open && (
-              <div className="fixed inset-0 flex items-center justify-center z-50">
+              <div
+                className={cn(
+                  "fixed inset-0 flex items-center justify-center z-50",
+                  isEditing ? "cursor-default" : "cursor-move"
+                )}
+              >
                 <div className="w-[90%] max-w-2xl p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
                   <div className="space-y-4">
                     <div className="space-y-2">
