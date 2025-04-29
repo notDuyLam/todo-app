@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { User, IUser } from '../models/user.model'; 
+import { Todo } from '../models/todo.model';
+import { TodoList } from '../models/todoList.model';
 import { generateToken } from '../utils/generateTokens';
 import mongoose from 'mongoose';
 
@@ -255,6 +257,10 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
   }
 
   try {
+    // Delete all TodoLists and Todos associated with the user
+    await TodoList.deleteMany({ userId }); // Assuming TodoLists have a `userId` field
+    await Todo.deleteMany({ userId }); // Assuming Todos have a `userId` field
+
     // Find user by ID and delete
     const deletedUser = await User.findByIdAndDelete(userId);
 
@@ -263,18 +269,13 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Note: In a real application, you would also want to:
-    // 1. Delete or reassign all TodoLists and Todos owned by this user
-    // 2. Handle any other related resources (comments, etc.)
-    // 3. Consider soft deletion instead of hard deletion
-
     res.status(200).json({
       success: true,
-      message: 'User deleted successfully',
+      message: 'User and associated data deleted successfully',
       data: {
         _id: deletedUser._id,
-        username: deletedUser.username
-      }
+        username: deletedUser.username,
+      },
     });
   } catch (error: any) {
     console.error('Error deleting user:', error);

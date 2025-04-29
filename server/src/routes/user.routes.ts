@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, getUserProfile, getAllUser } from '../controllers/user.controller';
+import { registerUser, getUserProfile, getAllUser, deleteUser } from '../controllers/user.controller';
 
 const router = express.Router();
 
@@ -10,9 +10,12 @@ router.post('/register', registerUser);
 // @route GET /api/users/:id
 router.get('/:id', getUserProfile);
 
+// @route DELETE /api/users/:id
+router.delete('/:id', deleteUser);
+
 // @route GET /api/users/
 router.get('/', getAllUser);
 
-// Bạn có thể thêm các route khác ở đây như login, update profile, etc.
+
 
 export default router;
