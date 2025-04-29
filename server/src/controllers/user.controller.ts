@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { User, IUser } from '../models/user.model'; 
+import { User } from '../models/user.model'; 
 import { Todo } from '../models/todo.model';
 import { TodoList } from '../models/todoList.model';
 import { generateToken } from '../utils/generateTokens';
@@ -258,8 +258,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 
   try {
     // Delete all TodoLists and Todos associated with the user
-    await TodoList.deleteMany({ userId }); // Assuming TodoLists have a `userId` field
-    await Todo.deleteMany({ userId }); // Assuming Todos have a `userId` field
+    // Call delete Todo List here
 
     // Find user by ID and delete
     const deletedUser = await User.findByIdAndDelete(userId);
