@@ -25,6 +25,7 @@ mongoose.connect(process.env.MONGO_URI!)
     // Start Server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`http://localhost:${PORT}`)
     });
   })
   .catch((error) => {

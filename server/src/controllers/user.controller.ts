@@ -186,20 +186,101 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
   });
 };
 
-// --- Add other controller functions here (e.g., loginUser, updateUserProfile, deleteUser) ---
-/*
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  // Logic for logging in user, comparing hashed password, generating token
-};
 
+/**
+ * @desc Update user profile
+ * @route PUT /api/users/:id
+ * @access Private
+ */
 export const updateUserProfile = async (req: Request, res: Response): Promise<void> => {
-  // Logic for finding user by ID and updating their data (e.g., username, email, password)
-  // Remember to handle password updates carefully (re-hashing)
+  const userId = req.params.id;
+  const { username, email, password } = req.body;
+
+  // Validate if the ID is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    res.status(400).json({ success: false, message: 'Invalid User ID format' });
+    return;
+  }
+
+  try {
+    // Find the user first
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    // Update the fields that were provided
+    if (username) user.username = username;
+    if (email) user.email = email;
+    
+    // If password is being updated, hash it first
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    // Save the updated user
+    const updatedUser = await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        createdAt: updatedUser.createdAt,
+      },
+      message: 'Profile updated successfully'
+    });
+  } catch (error: any) {
+    console.error('Error updating user profile:', error);
+    handleMongooseError(error, res);
+  }
 };
 
+/**
+ * @desc Delete a user account
+ * @route DELETE /api/users/:id
+ * @access Private
+ */
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-    // Logic for finding user by ID and deleting
-    // Consider implications of deleting a user with associated TodoLists and Todos
+  const userId = req.params.id;
+
+  // Validate if the ID is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    res.status(400).json({ success: false, message: 'Invalid User ID format' });
+    return;
+  }
+
+  try {
+    // Find user by ID and delete
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    // Note: In a real application, you would also want to:
+    // 1. Delete or reassign all TodoLists and Todos owned by this user
+    // 2. Handle any other related resources (comments, etc.)
+    // 3. Consider soft deletion instead of hard deletion
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+      data: {
+        _id: deletedUser._id,
+        username: deletedUser.username
+      }
+    });
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    handleMongooseError(error, res);
+  }
 };
-*/
+
+
 
