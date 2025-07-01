@@ -1,135 +1,99 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import { User } from '../models/user.model'; 
-import { Todo } from '../models/todo.model';
-import { TodoList } from '../models/todoList.model';
-import { generateToken } from '../utils/generateTokens';
-import mongoose from 'mongoose';
-
-// Helper function to handle Mongoose validation errors
-const handleMongooseError = (err: any, res: Response) => {
-  if (err instanceof mongoose.Error.ValidationError) {
-    const messages = Object.values(err.errors).map(val => (val as any).message);
-    return res.status(400).json({ success: false, message: messages.join(', ') });
-  }
-  // Add other specific Mongoose error types here if needed (e.g., CastError)
-  return res.status(500).json({ success: false, message: 'Server Error' });
-};
+import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import { User } from "../models/user.model";
+import { Todo } from "../models/todo.model";
+import { TodoList } from "../models/todoList.model";
+import { generateToken } from "../utils/generateTokens";
+import mongoose from "mongoose";
 
 /**
  * @desc Register a new user
  * @route POST /api/users/register
  * @access Public
  */
-export const registerUser = async (req: Request, res: Response): Promise<void> => {
-  const { username, email, password } = req.body;
-  console.log(password);
-
-  // Basic validation (more robust validation should ideally be done with a library like Joi or express-validator)
-  if (!username || !email || !password) {
-    res.status(400).json({ success: false, message: 'Please enter all fields' });
-    return;
-  }
-
+export const registerUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    // Check if user already exists (username or email unique constraints in model handle this too,
-    // but explicit check can give a clearer message)
-    const userExists = await User.findOne({ $or: [{ username }, { email }] });
+    const { username, email, password } = req.body;
 
-    if (userExists) {
-      res.status(400).json({ success: false, message: 'User with that username or email already exists' });
+    // Validate required fields
+    if (!username || !email || !password) {
+      res.status(400).json({
+        success: false,
+        message: "Username, email, and password are required",
+      });
       return;
     }
 
-    // --- Password Hashing would typically happen here ---
+    // Validate password length
+    if (password.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+      return;
+    }
+
+    // Check if user already exists
+    const userExists = await User.findOne({
+      $or: [{ username }, { email }],
+    });
+
+    if (userExists) {
+      res.status(400).json({
+        success: false,
+        message: "User with that username or email already exists",
+      });
+      return;
+    }
+
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create the user
-    const user = await User.create({
+    const user = new User({
       username,
       email,
       password: hashedPassword,
     });
 
-    if (user) {
-      // Generate a token for authentication
-      const token = generateToken((user._id as mongoose.Types.ObjectId).toString());
+    const savedUser = await user.save();
 
-      res.status(201).json({
-        success: true,
-        data: {
-          _id: user._id,
-          username: user.username,
-          email: user.email,
-          createdAt: user.createdAt,
-          token: token, // Include token in response
-        },
-        message: 'User registered successfully',
-      });
-    } else {
-       // This case should ideally be caught by validation errors or DB errors
-       res.status(400).json({ success: false, message: 'Invalid user data received' });
-    }
+    // Generate token
+    const token = generateToken(
+      (savedUser._id as mongoose.Types.ObjectId).toString()
+    );
 
-  } catch (error: any) {
-    console.error('Error registering user:', error); // Log the error server-side
-    handleMongooseError(error, res); // Use the helper for Mongoose errors
-  }
-};
-
-/**
- * @desc Get user profile
- * @route GET /api/users/:id
- * @access Private (typically requires authentication)
- */
-export const getUserProfile = async (req: Request, res: Response): Promise<void> => {
-  const userId = req.params.id;
-
-  // Validate if the ID is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(400).json({ success: false, message: 'Invalid User ID format' });
-      return;
-  }
-
-  try {
-    // Find the user by ID. The 'select: false' on password in the model
-    // means it won't be returned by default.
-    const user = await User.findById(userId);
-
-    if (user) {
-      res.status(200).json({
-        success: true,
-        data: {
-          _id: user._id,
-          username: user.username,
-          email: user.email,
-          createdAt: user.createdAt,
-        },
-      });
-    } else {
-      res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-  } catch (error: any) {
-    console.error('Error fetching user profile:', error); // Log the error server-side
-    handleMongooseError(error, res); // Use the helper for Mongoose errors
-    // res.status(500).json({ success: false, message: 'Server Error fetching user profile' }); // Generic server error
-  }
-};
-
-export const getAllUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const users = await User.find(); // Excluding password from results
-    
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      count: users.length,
-      data: users
+      data: {
+        _id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        createdAt: savedUser.createdAt,
+        token,
+      },
+      message: "User registered successfully",
     });
-    } catch (error: any) {
-    console.error('Error fetching all users:', error);
-    handleMongooseError(error, res);
+  } catch (error) {
+    // Handle duplicate key errors
+    if ((error as any).code === 11000) {
+      const field = Object.keys((error as any).keyValue)[0];
+      res.status(400).json({
+        success: false,
+        message: `${field} already exists`,
+      });
+      return;
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to register user",
+      error: (error as Error).message,
+    });
   }
 };
 
@@ -139,148 +103,346 @@ export const getAllUser = async (req: Request, res: Response): Promise<void> => 
  * @access Public
  */
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
-
-  // Basic validation
-  if (!username || !password) {
-    res.status(400).json({ success: false, message: 'Please provide username and password' });
-    return;
-  }
-
   try {
-    // Find the user by email
-    const user = await User.findOne({ username }).select('+password');
+    const { username, password } = req.body;
 
-    // Check if user exists and password is correct
-    if (user && user.password && (await bcrypt.compare(password, user.password))) {
-      // Generate token
-      const token = generateToken((user._id as mongoose.Types.ObjectId).toString());
-
-      res.status(200).json({
-        success: true,
-        data: {
-          _id: user._id,
-          username: user.username,
-          email: user.email,
-          createdAt: user.createdAt,
-          token,
-        },
-        message: 'Login successful',
+    // Validate required fields
+    if (!username || !password) {
+      res.status(400).json({
+        success: false,
+        message: "Username and password are required",
       });
-    } else {
-      res.status(401).json({ success: false, message: 'Invalid email or password' });
+      return;
     }
-  } catch (error: any) {
-    console.error('Error logging in user:', error);
-    handleMongooseError(error, res);
+
+    // Find user and include password field
+    const user = await User.findOne({ username }).select("+password");
+
+    if (!user || !user.password) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid username or password",
+      });
+      return;
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid username or password",
+      });
+      return;
+    }
+
+    // Generate token
+    const token = generateToken(
+      (user._id as mongoose.Types.ObjectId).toString()
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.createdAt,
+        token,
+      },
+      message: "Login successful",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to login user",
+      error: (error as Error).message,
+    });
   }
 };
 
-export const logoutUser = async (req: Request, res: Response): Promise<void> => {
-  // On the server side, we don't need to do much for logout
-  // Since we're using JWT tokens, we don't store session state on the server
-  // The client will handle removing the token from storage
-  
-  // We can just send back a success response
+/**
+ * @desc Logout user
+ * @route POST /api/users/logout
+ * @access Public
+ */
+export const logoutUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  // For JWT tokens, logout is handled client-side by removing the token
   res.status(200).json({
     success: true,
-    message: 'Logged out successfully'
+    message: "Logged out successfully",
   });
 };
 
+/**
+ * @desc Get all users
+ * @route GET /api/users
+ * @access Private (Admin)
+ */
+export const getAllUsers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const users = await User.find();
+
+    // Get stats for each user
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const todoListCount = await TodoList.countDocuments({
+          userId: user._id,
+        });
+        const todoCount = await Todo.countDocuments({
+          listId: {
+            $in: await TodoList.find({ userId: user._id }).distinct("_id"),
+          },
+        });
+
+        return {
+          ...user.toObject(),
+          stats: {
+            todoListCount,
+            todoCount,
+          },
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: usersWithStats,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch users",
+      error: (error as Error).message,
+    });
+  }
+};
+
+/**
+ * @desc Get user profile by ID
+ * @route GET /api/users/:id
+ * @access Private
+ */
+export const getUserById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+      return;
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Get user stats
+    const todoListCount = await TodoList.countDocuments({ userId: id });
+    const todoLists = await TodoList.find({ userId: id });
+    const todoListIds = todoLists.map((list) => list._id);
+    const todoCount = await Todo.countDocuments({
+      listId: { $in: todoListIds },
+    });
+
+    const userWithStats = {
+      ...user.toObject(),
+      stats: {
+        todoListCount,
+        todoCount,
+      },
+    };
+
+    res.status(200).json({
+      success: true,
+      data: userWithStats,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user",
+      error: (error as Error).message,
+    });
+  }
+};
 
 /**
  * @desc Update user profile
  * @route PUT /api/users/:id
  * @access Private
  */
-export const updateUserProfile = async (req: Request, res: Response): Promise<void> => {
-  const userId = req.params.id;
-  const { username, email, password } = req.body;
-
-  // Validate if the ID is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    res.status(400).json({ success: false, message: 'Invalid User ID format' });
-    return;
-  }
-
+export const updateUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    // Find the user first
-    const user = await User.findById(userId);
-    
-    if (!user) {
-      res.status(404).json({ success: false, message: 'User not found' });
+    const { id } = req.params;
+    const { username, email, password } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
       return;
     }
 
-    // Update the fields that were provided
-    if (username) user.username = username;
-    if (email) user.email = email;
-    
-    // If password is being updated, hash it first
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
     }
 
-    // Save the updated user
-    const updatedUser = await user.save();
+    // Check for duplicate username/email if they're being updated
+    if (username && username !== user.username) {
+      const usernameExists = await User.findOne({ username, _id: { $ne: id } });
+      if (usernameExists) {
+        res.status(400).json({
+          success: false,
+          message: "Username already exists",
+        });
+        return;
+      }
+    }
+
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email, _id: { $ne: id } });
+      if (emailExists) {
+        res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+        return;
+      }
+    }
+
+    // Update fields
+    const updateData: any = {};
+    if (username !== undefined) updateData.username = username;
+    if (email !== undefined) updateData.email = email;
+
+    // Hash new password if provided
+    if (password) {
+      if (password.length < 6) {
+        res.status(400).json({
+          success: false,
+          message: "Password must be at least 6 characters long",
+        });
+        return;
+      }
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(200).json({
       success: true,
       data: {
-        _id: updatedUser._id,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        createdAt: updatedUser.createdAt,
+        _id: updatedUser!._id,
+        username: updatedUser!.username,
+        email: updatedUser!.email,
+        createdAt: updatedUser!.createdAt,
       },
-      message: 'Profile updated successfully'
+      message: "User updated successfully",
     });
-  } catch (error: any) {
-    console.error('Error updating user profile:', error);
-    handleMongooseError(error, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update user",
+      error: (error as Error).message,
+    });
   }
 };
 
 /**
- * @desc Delete a user account
+ * @desc Delete user account
  * @route DELETE /api/users/:id
  * @access Private
  */
-export const deleteUser = async (req: Request, res: Response): Promise<void> => {
-  const userId = req.params.id;
-
-  // Validate if the ID is a valid MongoDB ObjectId
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    res.status(400).json({ success: false, message: 'Invalid User ID format' });
-    return;
-  }
-
+export const deleteUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    // Delete all TodoLists and Todos associated with the user
-    // Call delete Todo List here
+    const { id } = req.params;
 
-    // Find user by ID and delete
-    const deletedUser = await User.findByIdAndDelete(userId);
-
-    if (!deletedUser) {
-      res.status(404).json({ success: false, message: 'User not found' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
       return;
     }
 
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Get user's todo lists to delete associated todos
+    const todoLists = await TodoList.find({ userId: id });
+    const todoListIds = todoLists.map((list) => list._id);
+
+    // Delete all todos associated with user's lists
+    const todosDeleted = await Todo.deleteMany({
+      listId: { $in: todoListIds },
+    });
+
+    // Delete all todo lists associated with the user
+    const todoListsDeleted = await TodoList.deleteMany({ userId: id });
+
+    // Delete the user
+    await User.findByIdAndDelete(id);
+
     res.status(200).json({
       success: true,
-      message: 'User and associated data deleted successfully',
+      message: "User and associated data deleted successfully",
       data: {
-        _id: deletedUser._id,
-        username: deletedUser.username,
+        deletedUser: {
+          _id: user._id,
+          username: user.username,
+        },
+        deletedTodoLists: todoListsDeleted.deletedCount,
+        deletedTodos: todosDeleted.deletedCount,
       },
     });
-  } catch (error: any) {
-    console.error('Error deleting user:', error);
-    handleMongooseError(error, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete user",
+      error: (error as Error).message,
+    });
   }
 };
-
-
-

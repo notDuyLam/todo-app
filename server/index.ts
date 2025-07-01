@@ -17,17 +17,17 @@ app.use(express.json()); // Để đọc JSON body từ req.body
 // Connect MongoDB
 mongoose.connect(process.env.MONGO_URI!)
   .then(() => {
-    console.log('✅ MongoDB connected');
+    console.log('MongoDB connected');
 
     // Use Routes
     app.use('/api/users', userRoutes);
 
     // Start Server
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`Server running on port ${PORT}`);
       console.log(`http://localhost:${PORT}`)
     });
   })
   .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error);
   });
