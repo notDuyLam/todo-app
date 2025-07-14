@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { Todo } from "./TodoItem";
-import AddTodoObject from "./AddTodo";
-import TodoListCom from "./TodoList";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Loader2, Moon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Todo } from "../components/TodoItem";
+import AddTodoObject from "../components/AddTodo";
+import TodoListCom from "../components/TodoList";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Loader2 } from "lucide-react";
 
 function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([

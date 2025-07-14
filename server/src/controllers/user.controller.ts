@@ -5,6 +5,7 @@ import { Todo } from "../models/todo.model";
 import { TodoList } from "../models/todoList.model";
 import { generateToken } from "../utils/generateTokens";
 import mongoose from "mongoose";
+import { AuthRequest } from "../middleware/authMiddleware";
 
 /**
  * @desc Register a new user
@@ -444,5 +445,31 @@ export const deleteUser = async (
       message: "Failed to delete user",
       error: (error as Error).message,
     });
+  }
+};
+
+export const getUserProfile = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error("Error in getUserProfile:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

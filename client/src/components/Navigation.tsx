@@ -26,6 +26,13 @@ function Navigation({ darkMode, setDarkMode }: NavigationProps) {
               Profile
             </Button>
           </Link>
+          <Link to="/login">
+            <Button
+              variant={location.pathname === "/login" ? "default" : "outline"}
+            >
+              Login
+            </Button>
+          </Link>
         </div>
 
         <Button
