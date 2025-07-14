@@ -19,12 +19,12 @@ router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 
 // Protected routes - PUT SPECIFIC ROUTES FIRST
-router.get("/profile", authenticateJWT, getUserProfile); // ✅ Specific route first
+router.get("/profile", authenticateJWT, getUserProfile); //
 router.get("/", getAllUsers);
-router.get("/:id", getUserById); // ✅ Dynamic route last
+router.get("/:id", getUserById); //
 
 // Other protected routes
-router.put("/:id", authenticateJWT, updateUser); // Consider adding auth
+router.put("/:id", authenticateJWT, updateUser);
 router.delete("/:id", authenticateJWT, deleteUser);
 
 export default router;

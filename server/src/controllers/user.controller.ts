@@ -456,18 +456,45 @@ export const getUserProfile = async (
     const userId = req.user?.id;
 
     if (!userId) {
-      res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
       return;
     }
 
     const user = await User.findById(userId).select("-password");
 
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).json({ success: false, message: "User not found" });
       return;
     }
 
-    res.json(user);
+    // Get user stats
+    const todoListCount = await TodoList.countDocuments({ userId });
+    const todoLists = await TodoList.find({ userId });
+    const todoListIds = todoLists.map((list) => list._id);
+    const todoCount = await Todo.countDocuments({
+      listId: { $in: todoListIds },
+    });
+
+    const userWithStats = {
+      ...user.toObject(),
+      stats: {
+        todoListCount,
+        todoCount,
+      },
+    };
+
+    res.status(200).json({
+      success: true,
+      data: userWithStats,
+    });
   } catch (err) {
     console.error("Error in getUserProfile:", err);
     res.status(500).json({ message: "Server error" });

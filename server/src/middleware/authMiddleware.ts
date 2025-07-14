@@ -10,8 +10,6 @@ export const authenticateJWT = (
   res: Response,
   next: NextFunction
 ): void => {
-  console.log("Authorization header:", req.headers.authorization);
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
