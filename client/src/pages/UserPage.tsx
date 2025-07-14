@@ -96,7 +96,13 @@ function UserPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Member since</p>
-                  <p className="font-medium">{user.createdAt}</p>
+                  <p className="font-medium">
+                    {new Date(user.createdAt).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
                 </div>
               </div>
             </div>
