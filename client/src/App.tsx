@@ -4,6 +4,7 @@ import Navigation from "./components/Navigation";
 import UserPage from "./pages/UserPage";
 import TodoPage from "./pages/TodoPage";
 import LoginPage from "./pages/LoginPage";
+import TodoListPage from "./pages/TodoListPage";
 import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
@@ -20,7 +21,8 @@ function App() {
         <div className="min-h-screen bg-gradient-to-b...">
           <Navigation darkMode={darkMode} setDarkMode={setDarkMode} />
           <Routes>
-            <Route path="/" element={<TodoPage />} />
+            <Route path="/" element={<TodoListPage />} />
+            <Route path="/task" element={<TodoPage />} />
             <Route path="/user" element={<UserPage />} />
             <Route path="/login" element={<LoginPage />} />
           </Routes>

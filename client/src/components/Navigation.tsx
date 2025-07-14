@@ -16,6 +16,13 @@ function Navigation({ darkMode, setDarkMode }: NavigationProps) {
         <div className="flex gap-4">
           <Link to="/">
             <Button variant={location.pathname === "/" ? "default" : "outline"}>
+              Lists
+            </Button>
+          </Link>
+          <Link to="/task">
+            <Button
+              variant={location.pathname === "/task" ? "default" : "outline"}
+            >
               Tasks
             </Button>
           </Link>
