@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Moon, Sun } from "lucide-react";
@@ -19,9 +18,13 @@ function Navigation({ darkMode, setDarkMode }: NavigationProps) {
               Lists
             </Button>
           </Link>
-          <Link to="/task">
+          <Link to="/todoLists/:listId">
             <Button
-              variant={location.pathname === "/task" ? "default" : "outline"}
+              variant={
+                location.pathname === "/todoLists/:listId"
+                  ? "default"
+                  : "outline"
+              }
             >
               Tasks
             </Button>

@@ -19,10 +19,13 @@ import {
   Folder,
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function TodoListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const navigate = useNavigate();
 
   // Mock data - replace with real data later
   const mockTodoLists = [
@@ -247,6 +250,7 @@ function TodoListPage() {
             {filteredLists.map((list) => (
               <Card
                 key={list.id}
+                onClick={() => navigate(`/todolists/${list.id}`)}
                 className="hover:shadow-lg transition-shadow cursor-pointer group"
               >
                 <CardHeader className="pb-3">

@@ -1,30 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Todo } from "../components/TodoItem";
 import AddTodoObject from "../components/AddTodo";
 import TodoListCom from "../components/TodoList";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useParams } from "react-router-dom";
+import api from "../api/axios";
 
 function TodoPage() {
-  const [todos, setTodos] = useState<Todo[]>([
-    {
-      id: 1,
-      text: "Learn React",
-      description: "This is a prototype task!",
-      due: new Date("2024-04-13"),
-      completed: false,
-    },
-    {
-      id: 2,
-      text: "Luyện tập TypeScript",
-      completed: false,
-      due: new Date(),
-    },
-  ]);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const { listId } = useParams();
+
+  // Mock data
+  // [
+  //   {
+  //     id: 1,
+  //     text: "Learn React",
+  //     description: "This is a prototype task!",
+  //     due: new Date("2024-04-13"),
+  //     completed: false,
+  //   },
+  //   {
+  //     id: 2,
+  //     text: "Luyện tập TypeScript",
+  //     completed: false,
+  //     due: new Date(),
+  //   },
+  // ]
 
   const [filter, setFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      try {
+        const res = await api.get(`/api/todo/${listId}`);
+        setTodos(res.data);
+      } catch (err) {
+        console.error("Failed to fetch todos:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (listId) fetchTodos();
+  }, [listId]);
 
   const completedCount = todos.filter((todo) => todo.completed).length;
 
@@ -39,6 +60,7 @@ function TodoPage() {
     }, 300);
   };
 
+  // TODO: Implement this to call backend route
   function handleAddTodo(inputText: string, dueDate?: Date, des?: string) {
     const newTodo: Todo = {
       id: todos.length + 1,
@@ -50,6 +72,7 @@ function TodoPage() {
     setTodos([...todos, newTodo]);
   }
 
+  // TODO: Implement this to call backend route
   function handleToggleComplete(id: number) {
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
@@ -58,10 +81,12 @@ function TodoPage() {
     );
   }
 
+  // TODO: Implement this to call backend route
   function handleDeleteTodo(id: number) {
     setTodos(todos.filter((todo) => todo.id !== id));
   }
 
+  // TODO: Implement this to call backend route
   function handleEdit(
     id: number,
     newText: string,
@@ -91,6 +116,8 @@ function TodoPage() {
             Keep track of your daily tasks
           </p>
         </header>
+
+        <div className="">Todos for List {listId}</div>
 
         <Card className="mb-6">
           <CardContent className="p-4">
