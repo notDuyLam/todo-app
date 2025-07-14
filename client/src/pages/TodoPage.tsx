@@ -12,31 +12,15 @@ function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const { listId } = useParams();
 
-  // Mock data
-  // [
-  //   {
-  //     id: 1,
-  //     text: "Learn React",
-  //     description: "This is a prototype task!",
-  //     due: new Date("2024-04-13"),
-  //     completed: false,
-  //   },
-  //   {
-  //     id: 2,
-  //     text: "Luyện tập TypeScript",
-  //     completed: false,
-  //     due: new Date(),
-  //   },
-  // ]
-
   const [filter, setFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const res = await api.get(`/api/todo/${listId}`);
-        setTodos(res.data);
+        const res = await api.get(`/api/todo/list/${listId}`);
+        console.log(res.data);
+        setTodos(res.data.data);
       } catch (err) {
         console.error("Failed to fetch todos:", err);
       } finally {
@@ -64,7 +48,7 @@ function TodoPage() {
   function handleAddTodo(inputText: string, dueDate?: Date, des?: string) {
     const newTodo: Todo = {
       id: todos.length + 1,
-      text: inputText,
+      title: inputText,
       completed: false,
       due: dueDate,
       description: des,

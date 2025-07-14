@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 router.get("/", getAllTodos);
 router.get("/:id", getTodoById);
-router.get("/:listId", getTodosByListId);
+router.get("/list/:listId", getTodosByListId);
 router.post("/", createTodo);
 router.put("/", updateTodo);
 router.delete("/:id", deleteTodo);

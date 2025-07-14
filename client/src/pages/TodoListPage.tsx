@@ -25,7 +25,7 @@ import api from "@/api/axios";
 import { Loader2 } from "lucide-react"; // For loading spinner
 
 type TodoList = {
-  id: string;
+  _id: string;
   title: string;
   category: string;
   userId: string;
@@ -282,8 +282,8 @@ function TodoListPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredLists.map((list) => (
               <Card
-                key={list.id}
-                onClick={() => navigate(`/todolists/${list.id}`)}
+                key={list._id}
+                onClick={() => navigate(`/todolists/${list._id}`)}
                 className="hover:shadow-lg transition-shadow cursor-pointer group"
               >
                 <CardHeader className="pb-3">

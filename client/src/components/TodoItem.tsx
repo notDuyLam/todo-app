@@ -13,7 +13,7 @@ import { cn } from "../lib/utils";
 
 export type Todo = {
   id: number;
-  text: string;
+  title: string;
   description?: string;
   due?: Date;
   completed: boolean;
@@ -37,7 +37,7 @@ const TodoItem = ({
   setIsEditing,
 }: TodoItemProps) => {
   const [open, setOpen] = useState(false);
-  const [editText, setEditText] = useState(todo.text);
+  const [editText, setEditText] = useState(todo.title);
   const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
   const [editDes, setEditDes] = useState(todo.description);
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -75,7 +75,7 @@ const TodoItem = ({
               todo.completed ? "text-gray-400 line-through" : ""
             }`}
           >
-            {todo.text}
+            {todo.title}
           </div>
         </div>
         {todo.description && (
