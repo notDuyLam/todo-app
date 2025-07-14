@@ -8,7 +8,7 @@ import {
 import api from "../api/axios";
 
 type User = {
-  id: string;
+  _id: string;
   username: string;
   email: string;
   createdAt: string;

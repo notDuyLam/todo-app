@@ -18,119 +18,86 @@ import {
   Clock,
   Folder,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import api from "@/api/axios";
+import { Loader2 } from "lucide-react"; // For loading spinner
+
+type TodoList = {
+  id: string;
+  title: string;
+  category: string;
+  userId: string;
+  todoCount: number;
+  completedTodos: number;
+  createdAt: string;
+  updatedAt: string;
+};
 
 function TodoListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [todoLists, setTodoLists] = useState<TodoList[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
 
-  // Mock data - replace with real data later
-  const mockTodoLists = [
-    {
-      id: "1",
-      title: "Work Projects",
-      category: "work",
-      todoCount: 12,
-      completedTodos: 8,
-      createdAt: "2024-01-15",
-      lastUpdated: "2 hours ago",
-    },
-    {
-      id: "2",
-      title: "Personal Goals",
-      category: "personal",
-      todoCount: 7,
-      completedTodos: 3,
-      createdAt: "2024-01-10",
-      lastUpdated: "1 day ago",
-    },
-    {
-      id: "3",
-      title: "Shopping List",
-      category: "shopping",
-      todoCount: 15,
-      completedTodos: 15,
-      createdAt: "2024-01-20",
-      lastUpdated: "3 days ago",
-    },
-    {
-      id: "4",
-      title: "Study Schedule",
-      category: "education",
-      todoCount: 9,
-      completedTodos: 5,
-      createdAt: "2024-01-05",
-      lastUpdated: "5 hours ago",
-    },
-    {
-      id: "5",
-      title: "Fitness Plan",
-      category: "health",
-      todoCount: 6,
-      completedTodos: 2,
-      createdAt: "2024-01-12",
-      lastUpdated: "1 week ago",
-    },
-  ];
+  useEffect(() => {
+    const fetchTodoLists = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!isAuthenticated || !user) {
+          setError("Please log in to view your todo lists");
+          return;
+        }
+
+        console.log(user);
+
+        // Fetch user's todo lists
+        const response = await api.get(`/api/todoList/user/${user._id}`);
+
+        if (response.data.success) {
+          setTodoLists(response.data.data);
+        } else {
+          setError("Failed to fetch todo lists");
+        }
+      } catch (error: any) {
+        console.error("Error fetching todo lists", error);
+        setError(error.resonse?.data?.message || "Faied to fetch todo lists");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTodoLists();
+  }, [isAuthenticated, user]);
+
+  // What I wanna do?
+  // I want to extract category of each list to make my new own category fiedld
+
+  const categoriesMap: Record<string, number> = {};
+
+  todoLists.forEach((list) => {
+    const category = list.category || "general";
+    categoriesMap[category] = (categoriesMap[category] || 0) + 1;
+  });
 
   const categories = [
-    { id: "all", label: "All Lists", count: mockTodoLists.length },
-    {
-      id: "work",
-      label: "Work",
-      count: mockTodoLists.filter((list) => list.category === "work").length,
-    },
-    {
-      id: "personal",
-      label: "Personal",
-      count: mockTodoLists.filter((list) => list.category === "personal")
-        .length,
-    },
-    {
-      id: "shopping",
-      label: "Shopping",
-      count: mockTodoLists.filter((list) => list.category === "shopping")
-        .length,
-    },
-    {
-      id: "education",
-      label: "Education",
-      count: mockTodoLists.filter((list) => list.category === "education")
-        .length,
-    },
-    {
-      id: "health",
-      label: "Health",
-      count: mockTodoLists.filter((list) => list.category === "health").length,
-    },
+    { id: "all", label: "All Lists", count: todoLists.length },
+    ...Object.entries(categoriesMap).map(([key, count]) => ({
+      id: key,
+      label: key.charAt(0).toUpperCase() + key.slice(1), // capitalize
+      count,
+    })),
   ];
 
-  const getCategoryColor = (type: string) => {
-    const colors = {
-      work: "bg-blue-500",
-      personal: "bg-green-500",
-      shopping: "bg-purple-500",
-      education: "bg-orange-500",
-      health: "bg-pink-500",
-    };
-    return colors[type as keyof typeof colors] || "bg-gray-500";
-  };
+  // bg-gray-500
 
-  const getCategoryIcon = (type: string) => {
-    const icons = {
-      work: "💼",
-      personal: "🏠",
-      shopping: "🛒",
-      education: "📚",
-      health: "💪",
-    };
-    return icons[type as keyof typeof icons] || "📋";
-  };
-
-  const filteredLists = mockTodoLists.filter((list) => {
+  const filteredLists = todoLists.filter((list) => {
     const matchesSearch = list.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -138,6 +105,72 @@ function TodoListPage() {
       selectedCategory === "all" || list.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Format date function
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInHours < 48) return "1 day ago";
+    return `${Math.floor(diffInHours / 24)} days ago`;
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-10 max-w-7xl">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading your todo lists...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-10 max-w-7xl">
+        <Card className="py-12">
+          <CardContent className="text-center">
+            <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <span className="text-red-500 text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Error Loading Lists</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Not authenticated state
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-10 max-w-7xl">
+        <Card className="py-12">
+          <CardContent className="text-center">
+            <h3 className="text-lg font-semibold mb-2">Please Log In</h3>
+            <p className="text-muted-foreground mb-4">
+              You need to log in to view your todo lists
+            </p>
+            <Button onClick={() => navigate("/login")}>Go to Login</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-7xl">
@@ -218,14 +251,14 @@ function TodoListPage() {
                 <span className="text-sm text-muted-foreground">
                   Total Lists
                 </span>
-                <Badge variant="secondary">{mockTodoLists.length}</Badge>
+                <Badge variant="secondary">{todoLists.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
                   Total Tasks
                 </span>
                 <Badge variant="outline">
-                  {mockTodoLists.reduce((sum, list) => sum + list.todoCount, 0)}
+                  {todoLists.reduce((sum, list) => sum + list.todoCount, 0)}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -234,7 +267,7 @@ function TodoListPage() {
                   variant="default"
                   className="bg-green-500 hover:bg-green-600"
                 >
-                  {mockTodoLists.reduce(
+                  {todoLists.reduce(
                     (sum, list) => sum + list.completedTodos,
                     0
                   )}
@@ -257,12 +290,8 @@ function TodoListPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-10 h-10 rounded-lg ${getCategoryColor(
-                          list.category
-                        )} flex items-center justify-center text-white text-lg`}
-                      >
-                        {getCategoryIcon(list.category)}
-                      </div>
+                        className={`w-10 h-10 rounded-lg bg-gray-500 flex items-center justify-center text-white text-lg`}
+                      ></div>
                       <div>
                         <CardTitle className="text-lg line-clamp-1">
                           {list.title}
@@ -295,9 +324,9 @@ function TodoListPage() {
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full transition-all duration-300 ${getCategoryColor(
-                          list.category
-                        )}`}
+                        className={
+                          "h-2 rounded-full transition-all duration-300 bg-gray-500"
+                        }
                         style={{
                           width: `${
                             (list.completedTodos / list.todoCount) * 100
@@ -332,11 +361,11 @@ function TodoListPage() {
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Created {list.createdAt}
+                        Created {formatDate(list.createdAt)}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {list.lastUpdated}
+                        {formatRelativeTime(list.updatedAt)}
                       </span>
                     </div>
                   </div>

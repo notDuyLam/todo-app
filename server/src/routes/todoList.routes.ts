@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.post("/", createTodoList);
 router.get("/", getAllTodoLists);
-router.get("/:userId", getTodoListsByUserId);
+router.get("/user/:userId", getTodoListsByUserId);
 router.get("/id", getTodoListById);
 router.put("/", updateTodoList);
 router.delete("/", deleteTodoList);
