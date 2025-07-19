@@ -9,13 +9,13 @@ import { format } from "date-fns";
 import { cn } from "../lib/utils";
 
 type AddTodo = {
-  onAddTodo: (text: string, dueDate?: Date, description?: string) => void;
+  onAddTodo: (text: string, dueDate?: string, description?: string) => void;
 };
 
 const AddTodoObject = ({ onAddTodo }: AddTodo) => {
   const [text, setText] = useState("");
   const [des, setDes] = useState("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [date, setDate] = useState<string | undefined>(undefined);
   const [addDesOpen, setAddDesOpen] = useState(false);
 
   const handleChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,8 +76,12 @@ const AddTodoObject = ({ onAddTodo }: AddTodo) => {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={date}
-                  onSelect={setDate}
+                  selected={date ? new Date(date) : undefined}
+                  onSelect={(selectedDate) =>
+                    setDate(
+                      selectedDate ? selectedDate.toISOString() : undefined
+                    )
+                  }
                   initialFocus
                 />
               </PopoverContent>
@@ -111,16 +115,16 @@ const AddTodoObject = ({ onAddTodo }: AddTodo) => {
                     onChange={handleChangeDescription}
                   />
                   <div className="flex justify-end space-x-2 mt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setAddDesOpen(false)}
                       className="hover:bg-gray-100 transition-colors"
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => {
                         setAddDesOpen(false);
                       }}

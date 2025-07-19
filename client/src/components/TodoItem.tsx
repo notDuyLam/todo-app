@@ -15,7 +15,7 @@ export type Todo = {
   _id: number;
   title: string;
   description?: string;
-  due?: Date;
+  dueDate?: string;
   completed: boolean;
 };
 
@@ -24,7 +24,12 @@ type TodoItemProps = {
   isEditing: boolean;
   onCheck: (id: number, completed: boolean) => void;
   onDelete: (id: number) => void;
-  onEdit?: (id: number, text: string, due?: Date, completed?: boolean) => void;
+  onEdit?: (
+    _id: number,
+    title: string,
+    completed: boolean,
+    dueDate?: string
+  ) => void;
   setIsEditing: () => void;
 };
 
@@ -38,7 +43,7 @@ const TodoItem = ({
 }: TodoItemProps) => {
   const [open, setOpen] = useState(false);
   const [editText, setEditText] = useState(todo.title);
-  const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
+  const [editDue, setEditDue] = useState<string | undefined>(todo.dueDate);
   const [editDes, setEditDes] = useState(todo.description);
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: todo._id });
@@ -50,7 +55,7 @@ const TodoItem = ({
 
   const handleSave = () => {
     if (onEdit) {
-      onEdit(todo._id, editText, editDue, todo.completed);
+      onEdit(todo._id, editText, todo.completed, editDue);
     }
     setOpen(false);
   };
@@ -105,10 +110,12 @@ const TodoItem = ({
           </Badge>
         )}
         <div className="flex items-center gap-3">
-          {todo.due && (
+          {todo.dueDate && (
             <Badge variant="outline" className="flex gap-1 items-center">
               <CalendarIcon className="h-3 w-3" />
-              <span className="text-xs">{todo.due.toLocaleDateString()}</span>
+              <span className="text-xs">
+                {new Date(todo.dueDate).toLocaleDateString()}
+              </span>
             </Badge>
           )}
 
@@ -180,16 +187,22 @@ const TodoItem = ({
                             >
                               <CalendarIcon className="mr-2 h-3 w-3" />
                               {editDue
-                                ? editDue.toLocaleDateString()
+                                ? new Date(editDue).toLocaleDateString()
                                 : "Add due date"}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
-                              selected={editDue}
-                              onSelect={setEditDue}
-                              initialFocus
+                              selected={editDue ? new Date(editDue) : undefined}
+                              onSelect={(date) =>
+                                setEditDue(
+                                  date ? date.toISOString() : undefined
+                                )
+                              }
+                              className="rounded-md border shadow-sm"
+                              captionLayout="dropdown"
+                              weekStartsOn={1}
                             />
                           </PopoverContent>
                         </Popover>

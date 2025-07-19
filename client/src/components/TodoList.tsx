@@ -25,10 +25,10 @@ type TodoList = {
   onToggleComplete: (id: number, completed: boolean) => void;
   onDelete: (id: number) => void;
   onEdit: (
-    id: number,
+    _id: number,
     newText: string,
-    dueDate?: Date,
-    isComplete?: boolean
+    isComplete: boolean,
+    dueDate?: string | undefined
   ) => void;
   setTodos: (todos: Todo[]) => void;
 };

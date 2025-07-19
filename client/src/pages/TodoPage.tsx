@@ -19,7 +19,7 @@ function TodoPage() {
     const fetchTodos = async () => {
       try {
         const res = await api.get(`/api/todo/list/${listId}`);
-        console.log(res.data);
+        // console.log(res.data);
         setTodos(res.data.data);
       } catch (err) {
         console.error("Failed to fetch todos:", err);
@@ -46,14 +46,14 @@ function TodoPage() {
 
   async function handleAddTodo(
     inputText: string,
-    dueDate?: Date,
+    dueDate?: string,
     des?: string
   ) {
     const newTodo: Todo = {
       _id: todos.length + 1,
       title: inputText,
       completed: false,
-      due: dueDate,
+      dueDate: dueDate,
       description: des,
     };
 
@@ -63,7 +63,7 @@ function TodoPage() {
   }
 
   async function handleToggleComplete(id: number, completed: boolean) {
-    const res = await api.patch<Todo>(`/todo/${id}`, { completed });
+    const res = await api.put<Todo>(`/api/todo/${id}`, { completed });
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
         todo._id === id ? { ...todo, completed: !todo.completed } : todo
@@ -73,19 +73,19 @@ function TodoPage() {
   }
 
   async function handleDeleteTodo(id: number) {
-    const res = await api.delete<Todo>(`/todo/${id}`);
+    const res = await api.delete<Todo>(`/api/todo/${id}`);
     setTodos(todos.filter((todo) => todo._id !== id));
     return res.data;
   }
 
   async function handleEdit(
     id: number,
-    newText: string,
-    dueDate?: Date,
-    isComplete?: boolean
+    title: string,
+    isComplete?: boolean,
+    dueDate?: string | undefined
   ) {
-    const res = await api.put<Todo>(`/todo/${id}`, {
-      newText,
+    const res = await api.put<Todo>(`/api/todo/${id}`, {
+      title,
       dueDate,
       isComplete,
     });
@@ -94,8 +94,8 @@ function TodoPage() {
         todo._id === id
           ? {
               ...todo,
-              text: newText,
-              ...(dueDate !== undefined && { due: dueDate }),
+              title: title,
+              ...(dueDate !== undefined && { dueDate: dueDate }),
               ...(isComplete !== undefined && { completed: isComplete }),
             }
           : todo
