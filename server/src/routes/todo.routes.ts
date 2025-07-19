@@ -9,6 +9,7 @@ import {
   deleteAllTodosByListId,
 } from "../controllers/todo.controller";
 
+// api/todo
 const router = express.Router();
 router.get("/", getAllTodos);
 router.get("/:id", getTodoById);

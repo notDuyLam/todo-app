@@ -53,8 +53,6 @@ export const getTodosByListId = async (
 
     const todos = await Todo.find({ listId }).populate("listId", "title");
 
-    console.log(todos);
-
     res.status(200).json({
       success: true,
       count: todos.length,
@@ -177,8 +175,8 @@ export const updateTodo = async (
   res: Response
 ): Promise<void> => {
   try {
-    // console.log("Request params:", req.params);
-    // console.log("Request body:", req.body);
+    console.log("Request params:", req.params);
+    console.log("Request body:", req.body);
 
     const { id } = req.params;
     const { title, description, dueDate, completed } = req.body;

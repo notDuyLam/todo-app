@@ -17,6 +17,7 @@ export type Todo = {
   description?: string;
   dueDate?: string;
   completed: boolean;
+  listId: string;
 };
 
 type TodoItemProps = {
@@ -28,7 +29,8 @@ type TodoItemProps = {
     _id: number,
     title: string,
     completed: boolean,
-    dueDate?: string
+    dueDate?: string,
+    description?: string
   ) => void;
   setIsEditing: () => void;
 };
@@ -55,7 +57,7 @@ const TodoItem = ({
 
   const handleSave = () => {
     if (onEdit) {
-      onEdit(todo._id, editText, todo.completed, editDue);
+      onEdit(todo._id, editText, todo.completed, editDue, editDes);
     }
     setOpen(false);
   };
@@ -83,7 +85,7 @@ const TodoItem = ({
             {todo.title}
           </div>
         </div>
-        {todo.description && (
+        {todo.description && todo.description.trim() !== "" && (
           <Badge
             variant="secondary"
             className="p-2 text-xs gap-1 items-center flex"

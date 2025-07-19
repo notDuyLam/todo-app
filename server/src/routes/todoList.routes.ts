@@ -10,6 +10,8 @@ import {
 
 const router = express.Router();
 
+// /api/todoList
+
 router.post("/", createTodoList);
 router.get("/", getAllTodoLists);
 router.get("/user/:userId", getTodoListsByUserId);

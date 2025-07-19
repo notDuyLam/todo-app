@@ -59,8 +59,6 @@ function TodoListPage() {
         // Fetch user's todo lists
         const response = await api.get(`/api/todoList/user/${user._id}`);
 
-        console.log(response.data);
-
         if (response.data.success) {
           setTodoLists(response.data.data);
         } else {

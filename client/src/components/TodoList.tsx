@@ -82,7 +82,13 @@ const TodoListCom = ({
       >
         <Card className="w-full shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-semibold">Your Tasks</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              {filter === "completed"
+                ? "Completed Tasks"
+                : filter === "active"
+                ? "Active Tasks"
+                : "Your Tasks"}
+            </CardTitle>
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <span>Completed:</span>
               <span className="font-medium">{completedCounts}</span>
@@ -104,9 +110,9 @@ const TodoListCom = ({
                   <ul className="w-full space-y-3">
                     {sortedTodos
                       .filter((todo) => {
-                        if (filter === "all") return true;
-                        if (filter === "active") return !todo.completed;
-                        if (filter === "completed") return todo.completed;
+                        if (filter === "all") return true; // Show all todos
+                        if (filter === "active") return !todo.completed; // Show only active todos
+                        if (filter === "completed") return todo.completed; // Show only completed todos
                         return true;
                       })
                       .map((todo) => (
@@ -128,63 +134,67 @@ const TodoListCom = ({
         </Card>
       </DndContext>
 
-      {/* Completed todos start here */}
-      <Card className="completed-todos w-full shadow-sm h-auto">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between w-full">
-            <CardTitle className="text-xl font-semibold">
-              Completed Tasks ({completedCounts})
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto p-2 transition-transform duration-300"
-              onClick={() => setShowCompleted(!showCompleted)}
-            >
-              <span
-                className={`transition-transform duration-300 ${
-                  showCompleted ? "rotate-180" : ""
-                }`}
+      {/* Completed todos section - only show when filter is "all" */}
+      {filter === "all" && (
+        <Card className="completed-todos w-full shadow-sm h-auto">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between w-full">
+              <CardTitle className="text-xl font-semibold">
+                Completed Tasks ({completedCounts})
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-2 transition-transform duration-300"
+                onClick={() => setShowCompleted(!showCompleted)}
               >
-                ▼
-              </span>
-            </Button>
+                <span
+                  className={`transition-transform duration-300 ${
+                    showCompleted ? "rotate-180" : ""
+                  }`}
+                >
+                  ▼
+                </span>
+              </Button>
+            </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground"></div>
+          </CardHeader>
+          <div
+            className="overflow-hidden transition-all duration-300 ease-in-out"
+            style={{
+              maxHeight: showCompleted ? "1000px" : "0px",
+            }}
+          >
+            <CardContent>
+              {completedTodos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                  <p>You have no completed tasks</p>
+                </div>
+              ) : (
+                <SortableContext
+                  disabled={isEditing}
+                  items={completedTodos.map((todo) => todo._id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="w-full space-y-3">
+                    {completedTodos.map((todo) => (
+                      <TodoItem
+                        key={todo._id}
+                        todo={todo}
+                        isEditing={isEditing}
+                        onCheck={onToggleComplete}
+                        onDelete={onDelete}
+                        onEdit={onEdit}
+                        setIsEditing={handleSetEditing}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              )}
+            </CardContent>
           </div>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground"></div>
-        </CardHeader>
-        <div
-          className="overflow-hidden transition-all duration-300 ease-in-out"
-          style={{ maxHeight: showCompleted ? "1000px" : "0px" }}
-        >
-          <CardContent>
-            {completedTodos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                <p>You have no completed tasks</p>
-              </div>
-            ) : (
-              <SortableContext
-                disabled={isEditing}
-                items={completedTodos.map((todo) => todo._id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <ul className="w-full space-y-3">
-                  {completedTodos.map((todo) => (
-                    <TodoItem
-                      key={todo._id}
-                      todo={todo}
-                      isEditing={isEditing}
-                      onCheck={onToggleComplete}
-                      onDelete={onDelete}
-                      onEdit={onEdit}
-                      setIsEditing={handleSetEditing}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            )}
-          </CardContent>
-        </div>
-      </Card>
+        </Card>
+      )}
     </>
   );
 };

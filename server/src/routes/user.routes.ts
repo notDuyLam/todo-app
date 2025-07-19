@@ -13,6 +13,8 @@ import { authenticateJWT } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
+// api/users
+
 // Public routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);

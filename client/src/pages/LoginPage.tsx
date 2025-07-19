@@ -75,8 +75,6 @@ function LoginPage() {
           loginPayload
         );
 
-        console.log(response.data);
-
         if (response.data.success) {
           if (response.data.data) {
             await login(response.data.data.token); // Save token and fetch user

@@ -52,16 +52,20 @@ function TodoPage() {
     dueDate?: string,
     des?: string
   ) {
-    const newTodo: Todo = {
+    let newTodo: Todo = {
       _id: todos.length + 1,
       title: inputText,
       completed: false,
       dueDate: dueDate,
       description: des,
+      listId: listId ?? "",
     };
 
-    const res = await api.post<Todo>("/todo", newTodo);
-    setTodos([...todos, newTodo]);
+    const res = await api.post(`/api/todo`, newTodo);
+
+    // Use the actual todo returned from the server
+    const createdTodo = res.data.data;
+    setTodos([...todos, createdTodo]);
     return res.data;
   }
 
@@ -85,12 +89,14 @@ function TodoPage() {
     id: number,
     title: string,
     isComplete?: boolean,
-    dueDate?: string | undefined
+    dueDate?: string | undefined,
+    description?: string
   ) {
     const res = await api.put<Todo>(`/api/todo/${id}`, {
       title,
       dueDate,
       isComplete,
+      description,
     });
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
@@ -100,6 +106,7 @@ function TodoPage() {
               title: title,
               ...(dueDate !== undefined && { dueDate: dueDate }),
               ...(isComplete !== undefined && { completed: isComplete }),
+              ...(description !== undefined && { description: description }),
             }
           : todo
       )
