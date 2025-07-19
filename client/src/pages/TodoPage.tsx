@@ -19,7 +19,7 @@ function TodoPage() {
     const fetchTodos = async () => {
       try {
         const res = await api.get(`/api/todo/list/${listId}`);
-        // console.log(res.data);
+
         setTodos(res.data.data);
       } catch (err) {
         console.error("Failed to fetch todos:", err);

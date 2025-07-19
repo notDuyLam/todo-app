@@ -56,10 +56,10 @@ function TodoListPage() {
           return;
         }
 
-        console.log(user);
-
         // Fetch user's todo lists
         const response = await api.get(`/api/todoList/user/${user._id}`);
+
+        console.log(response.data);
 
         if (response.data.success) {
           setTodoLists(response.data.data);
@@ -289,9 +289,6 @@ function TodoListPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-lg bg-gray-500 flex items-center justify-center text-white text-lg`}
-                      ></div>
                       <div>
                         <CardTitle className="text-lg line-clamp-1">
                           {list.title}
@@ -325,7 +322,7 @@ function TodoListPage() {
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
                         className={
-                          "h-2 rounded-full transition-all duration-300 bg-gray-500"
+                          "h-2 rounded-full transition-all duration-300 bg-green-500"
                         }
                         style={{
                           width: `${

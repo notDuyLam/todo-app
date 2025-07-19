@@ -134,9 +134,14 @@ export const getTodoListsByUserId = async (
     const todoListsWithCounts = await Promise.all(
       todoLists.map(async (list) => {
         const todoCount = await Todo.countDocuments({ listId: list._id });
+        const completedTodos = await Todo.countDocuments({
+          listId: list._id,
+          completed: true,
+        });
         return {
           ...list.toObject(),
           todoCount,
+          completedTodos,
         };
       })
     );
