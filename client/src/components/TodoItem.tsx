@@ -12,7 +12,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { cn } from "../lib/utils";
 
 export type Todo = {
-  id: number;
+  _id: number;
   title: string;
   description?: string;
   due?: Date;
@@ -22,7 +22,7 @@ export type Todo = {
 type TodoItemProps = {
   todo: Todo;
   isEditing: boolean;
-  onCheck: (id: number) => void;
+  onCheck: (id: number, completed: boolean) => void;
   onDelete: (id: number) => void;
   onEdit?: (id: number, text: string, due?: Date, completed?: boolean) => void;
   setIsEditing: () => void;
@@ -41,7 +41,7 @@ const TodoItem = ({
   const [editDue, setEditDue] = useState<Date | undefined>(todo.due);
   const [editDes, setEditDes] = useState(todo.description);
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: todo.id });
+    useSortable({ id: todo._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -50,7 +50,7 @@ const TodoItem = ({
 
   const handleSave = () => {
     if (onEdit) {
-      onEdit(todo.id, editText, editDue, todo.completed);
+      onEdit(todo._id, editText, editDue, todo.completed);
     }
     setOpen(false);
   };
@@ -67,7 +67,7 @@ const TodoItem = ({
         <div className="flex items-center gap-3 flex-1">
           <Checkbox
             checked={todo.completed}
-            onCheckedChange={() => onCheck(todo.id)}
+            onCheckedChange={() => onCheck(todo._id, !todo.completed)}
             className="h-5 w-5 rounded-md"
           />
           <div
@@ -200,7 +200,9 @@ const TodoItem = ({
                       <Checkbox
                         id="completed"
                         checked={todo.completed}
-                        onCheckedChange={() => onCheck(todo.id)}
+                        onCheckedChange={() =>
+                          onCheck(todo._id, !todo.completed)
+                        }
                       />
                       <label
                         htmlFor="completed"
@@ -242,7 +244,7 @@ const TodoItem = ({
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(todo.id);
+              onDelete(todo._id);
             }}
             className="hover:bg-red-700"
           >

@@ -14,7 +14,7 @@ router.get("/", getAllTodos);
 router.get("/:id", getTodoById);
 router.get("/list/:listId", getTodosByListId);
 router.post("/", createTodo);
-router.put("/", updateTodo);
+router.put("/:id", updateTodo);
 router.delete("/:id", deleteTodo);
 router.delete("/:listId", deleteAllTodosByListId);
 

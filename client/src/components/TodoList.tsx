@@ -22,7 +22,7 @@ type TodoList = {
   todos: Todo[];
   filter: string;
   completedCounts: number;
-  onToggleComplete: (id: number) => void;
+  onToggleComplete: (id: number, completed: boolean) => void;
   onDelete: (id: number) => void;
   onEdit: (
     id: number,
@@ -60,8 +60,8 @@ const TodoListCom = ({
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (active.id !== over.id) {
-      const oldIndex = todos.findIndex((todo) => todo.id === active.id);
-      const newIndex = todos.findIndex((todo) => todo.id === over.id);
+      const oldIndex = todos.findIndex((todo) => todo._id === active.id);
+      const newIndex = todos.findIndex((todo) => todo._id === over.id);
       const newTodos = arrayMove(todos, oldIndex, newIndex);
       setTodos(newTodos);
     }
@@ -98,7 +98,7 @@ const TodoListCom = ({
               ) : (
                 <SortableContext
                   disabled={isEditing}
-                  items={sortedTodos.map((todo) => todo.id)}
+                  items={sortedTodos.map((todo) => todo._id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <ul className="w-full space-y-3">
@@ -111,7 +111,7 @@ const TodoListCom = ({
                       })
                       .map((todo) => (
                         <TodoItem
-                          key={todo.id}
+                          key={todo._id}
                           todo={todo}
                           isEditing={isEditing}
                           onCheck={onToggleComplete}
@@ -164,13 +164,13 @@ const TodoListCom = ({
             ) : (
               <SortableContext
                 disabled={isEditing}
-                items={completedTodos.map((todo) => todo.id)}
+                items={completedTodos.map((todo) => todo._id)}
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="w-full space-y-3">
                   {completedTodos.map((todo) => (
                     <TodoItem
-                      key={todo.id}
+                      key={todo._id}
                       todo={todo}
                       isEditing={isEditing}
                       onCheck={onToggleComplete}

@@ -44,42 +44,54 @@ function TodoPage() {
     }, 300);
   };
 
-  // TODO: Implement this to call backend route
-  function handleAddTodo(inputText: string, dueDate?: Date, des?: string) {
+  async function handleAddTodo(
+    inputText: string,
+    dueDate?: Date,
+    des?: string
+  ) {
     const newTodo: Todo = {
-      id: todos.length + 1,
+      _id: todos.length + 1,
       title: inputText,
       completed: false,
       due: dueDate,
       description: des,
     };
+
+    const res = await api.post<Todo>("/todo", newTodo);
     setTodos([...todos, newTodo]);
+    return res.data;
   }
 
-  // TODO: Implement this to call backend route
-  function handleToggleComplete(id: number) {
+  async function handleToggleComplete(id: number, completed: boolean) {
+    const res = await api.patch<Todo>(`/todo/${id}`, { completed });
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        todo._id === id ? { ...todo, completed: !todo.completed } : todo
       )
     );
+    return res.data;
   }
 
-  // TODO: Implement this to call backend route
-  function handleDeleteTodo(id: number) {
-    setTodos(todos.filter((todo) => todo.id !== id));
+  async function handleDeleteTodo(id: number) {
+    const res = await api.delete<Todo>(`/todo/${id}`);
+    setTodos(todos.filter((todo) => todo._id !== id));
+    return res.data;
   }
 
-  // TODO: Implement this to call backend route
-  function handleEdit(
+  async function handleEdit(
     id: number,
     newText: string,
     dueDate?: Date,
     isComplete?: boolean
   ) {
+    const res = await api.put<Todo>(`/todo/${id}`, {
+      newText,
+      dueDate,
+      isComplete,
+    });
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
-        todo.id === id
+        todo._id === id
           ? {
               ...todo,
               text: newText,
@@ -89,6 +101,7 @@ function TodoPage() {
           : todo
       )
     );
+    return res.data;
   }
 
   return (
