@@ -22,7 +22,7 @@ function App() {
           <Navigation darkMode={darkMode} setDarkMode={setDarkMode} />
           <Routes>
             <Route path="/" element={<TodoListPage />} />
-            <Route path="/todoLists" element={<TodoPage />} />
+            <Route path="/todoLists/:listId" element={<TodoPage />} />
             <Route path="/user" element={<UserPage />} />
             <Route path="/login" element={<LoginPage />} />
           </Routes>

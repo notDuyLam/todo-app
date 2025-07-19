@@ -12,6 +12,7 @@ function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const { listId } = useParams();
 
+  const [listName, setListName] = useState("");
   const [filter, setFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,7 +20,9 @@ function TodoPage() {
     const fetchTodos = async () => {
       try {
         const res = await api.get(`/api/todo/list/${listId}`);
+        const list = await api.get(`/api/todoList/${listId}`);
 
+        setListName(list.data.data.title);
         setTodos(res.data.data);
       } catch (err) {
         console.error("Failed to fetch todos:", err);
@@ -114,7 +117,15 @@ function TodoPage() {
           </p>
         </header>
 
-        <div className="">Todos for List {listId}</div>
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-semibold text-foreground mb-1">
+            {listName}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {todos.length} {todos.length === 1 ? "task" : "tasks"} •{" "}
+            {completedCount} completed
+          </p>
+        </div>
 
         <Card className="mb-6">
           <CardContent className="p-4">
