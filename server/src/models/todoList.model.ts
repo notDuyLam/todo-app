@@ -5,7 +5,6 @@ export interface ITodoList extends Document {
   title: string;
   userId: Types.ObjectId; // Reference to the User who owns this list
   category: string; // ✅ Add this field (optional since it has default)
-
   createdAt: Date;
   updatedAt: Date;
 }

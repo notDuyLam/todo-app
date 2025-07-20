@@ -10,7 +10,7 @@ export const createTodoList = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { userId, title } = req.body;
+    const { userId, category, title } = req.body;
 
     // Validate required fields
     if (!title || !userId) {
@@ -42,6 +42,7 @@ export const createTodoList = async (
 
     const newTodoList = new TodoList({
       title,
+      category,
       userId,
     });
 
