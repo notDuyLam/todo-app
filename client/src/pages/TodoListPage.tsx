@@ -55,6 +55,7 @@ type TodoList = {
 function TodoListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all"); // all, completed, incomplete
   const [todoLists, setTodoLists] = useState<TodoList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -122,7 +123,17 @@ function TodoListPage() {
       .includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || list.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+
+    // Filter by completion status
+    const matchesStatus =
+      selectedStatus === "all" ||
+      (selectedStatus === "completed" &&
+        list.todoCount > 0 &&
+        list.completedTodos === list.todoCount) ||
+      (selectedStatus === "incomplete" &&
+        (list.todoCount === 0 || list.completedTodos < list.todoCount));
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   // Format date function
@@ -376,10 +387,36 @@ function TodoListPage() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-          </Button>
+
+          {/* Status Filter Dropdown */}
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <SelectValue placeholder="Filter by status" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-400" />
+                  All Lists
+                </div>
+              </SelectItem>
+              <SelectItem value="completed">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  Completed
+                </div>
+              </SelectItem>
+              <SelectItem value="incomplete">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Incomplete
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -431,6 +468,40 @@ function TodoListPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
+                  Completed Lists
+                </span>
+                <Badge
+                  variant="default"
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  {
+                    todoLists.filter(
+                      (list) =>
+                        list.todoCount > 0 &&
+                        list.completedTodos === list.todoCount
+                    ).length
+                  }
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Incomplete Lists
+                </span>
+                <Badge
+                  variant="outline"
+                  className="border-blue-500 text-blue-600"
+                >
+                  {
+                    todoLists.filter(
+                      (list) =>
+                        list.todoCount === 0 ||
+                        list.completedTodos < list.todoCount
+                    ).length
+                  }
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
                   Total Tasks
                 </span>
                 <Badge variant="outline">
@@ -438,10 +509,12 @@ function TodoListPage() {
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Completed</span>
+                <span className="text-sm text-muted-foreground">
+                  Completed Tasks
+                </span>
                 <Badge
                   variant="default"
-                  className="bg-green-500 hover:bg-green-600"
+                  className="bg-emerald-500 hover:bg-emerald-600"
                 >
                   {todoLists.reduce(
                     (sum, list) => sum + list.completedTodos,
@@ -455,12 +528,12 @@ function TodoListPage() {
 
         {/* Todo Lists Grid */}
         <div className="lg:col-span-3">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="columns-1 md:columns-2 xl:columns-3 gap-4 space-y-4">
             {filteredLists.map((list) => (
               <Card
                 key={list._id}
                 onClick={() => navigate(`/todolists/${list._id}`)}
-                className="hover:shadow-lg transition-shadow cursor-pointer group"
+                className="hover:shadow-lg transition-shadow cursor-pointer group break-inside-avoid mb-4"
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -484,50 +557,123 @@ function TodoListPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Progress */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">
-                        {Math.round(
-                          (list.completedTodos / list.todoCount) * 100
-                        )}
-                        %
-                      </span>
+                  {/* Progress Section */}
+                  {list.todoCount === 0 ? (
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 mx-auto mb-3 bg-muted rounded-full flex items-center justify-center">
+                        <Plus className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        No tasks yet
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Click to add your first task
+                      </p>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className={
-                          "h-2 rounded-full transition-all duration-300 bg-green-500"
-                        }
-                        style={{
-                          width: `${
-                            (list.completedTodos / list.todoCount) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Progress Bar */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Progress
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">
+                              {Math.round(
+                                (list.completedTodos / list.todoCount) * 100
+                              )}
+                              %
+                            </span>
+                            {list.completedTodos === list.todoCount && (
+                              <Badge
+                                variant="default"
+                                className="bg-green-500 hover:bg-green-600 text-xs px-2 py-0"
+                              >
+                                Complete
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="w-full bg-muted/60 rounded-full h-2.5 shadow-inner">
+                          <div
+                            className={`h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm ${
+                              list.completedTodos === list.todoCount
+                                ? "bg-gradient-to-r from-green-500 to-green-600"
+                                : list.completedTodos > 0
+                                ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                                : "bg-gradient-to-r from-gray-400 to-gray-500"
+                            }`}
+                            style={{
+                              width: `${
+                                (list.completedTodos / list.todoCount) * 100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
 
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                      <List className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{list.todoCount}</p>
-                        <p className="text-xs text-muted-foreground">Total</p>
+                      {/* Stats Grid */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <List className="h-4 w-4 text-blue-600" />
+                            </div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-lg font-bold text-foreground">
+                              {list.todoCount}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Total Tasks
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            </div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-lg font-bold text-green-700 dark:text-green-400">
+                              {list.completedTodos}
+                            </p>
+                            <p className="text-xs text-green-600 dark:text-green-500">
+                              Completed Tasks
+                            </p>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Quick Summary */}
+                      {list.todoCount > 0 && (
+                        <div className="pt-2">
+                          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                            {list.completedTodos === list.todoCount ? (
+                              <>
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                                All tasks completed! 🎉
+                              </>
+                            ) : list.completedTodos === 0 ? (
+                              <>
+                                <Clock className="h-3 w-3" />
+                                Ready to start
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="h-3 w-3" />
+                                {list.todoCount - list.completedTodos} tasks
+                                remaining
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <div>
-                        <p className="text-sm font-medium">
-                          {list.completedTodos}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Done</p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Footer */}
                   <div className="pt-3 border-t border-border">
