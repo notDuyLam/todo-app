@@ -18,14 +18,16 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gradient-to-b...">
+        <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
           <Navigation darkMode={darkMode} setDarkMode={setDarkMode} />
-          <Routes>
-            <Route path="/" element={<TodoListPage />} />
-            <Route path="/todoLists/:listId" element={<TodoPage />} />
-            <Route path="/user" element={<UserPage />} />
-            <Route path="/login" element={<LoginPage />} />
-          </Routes>
+          <main className="container mx-auto px-4 py-6">
+            <Routes>
+              <Route path="/" element={<TodoListPage />} />
+              <Route path="/todoLists/:listId" element={<TodoPage />} />
+              <Route path="/user" element={<UserPage />} />
+              <Route path="/login" element={<LoginPage />} />
+            </Routes>
+          </main>
         </div>
       </Router>
     </AuthProvider>

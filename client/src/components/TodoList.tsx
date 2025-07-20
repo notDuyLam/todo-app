@@ -110,7 +110,7 @@ const TodoListCom = ({
                   <ul className="w-full space-y-3">
                     {sortedTodos
                       .filter((todo) => {
-                        if (filter === "all") return true; // Show all todos
+                        if (filter === "all") return !todo.completed; // Show all todos
                         if (filter === "active") return !todo.completed; // Show only active todos
                         if (filter === "completed") return todo.completed; // Show only completed todos
                         return true;
