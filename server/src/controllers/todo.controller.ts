@@ -175,9 +175,6 @@ export const updateTodo = async (
   res: Response
 ): Promise<void> => {
   try {
-    console.log("Request params:", req.params);
-    console.log("Request body:", req.body);
-
     const { id } = req.params;
     const { title, description, dueDate, completed } = req.body;
 

@@ -4,6 +4,23 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
@@ -41,6 +58,12 @@ function TodoListPage() {
   const [todoLists, setTodoLists] = useState<TodoList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newListTitle, setNewListTitle] = useState("");
+  const [newListCategory, setNewListCategory] = useState("general");
+  const [isCreating, setIsCreating] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
 
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -93,8 +116,6 @@ function TodoListPage() {
     })),
   ];
 
-  // bg-gray-500
-
   const filteredLists = todoLists.filter((list) => {
     const matchesSearch = list.title
       .toLowerCase()
@@ -122,6 +143,52 @@ function TodoListPage() {
     if (diffInHours < 48) return "1 day ago";
     return `${Math.floor(diffInHours / 24)} days ago`;
   };
+
+  const handleCreateList = async () => {
+    if (!newListTitle.trim()) return;
+
+    const finalCategory =
+      newListCategory === "Other" ? customCategory.trim() : newListCategory;
+
+    // Validate custom category if "Other" is selected
+    if (newListCategory === "Other" && !customCategory.trim()) {
+      setError("Please enter a custom category name");
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setError(""); // Clear any previous errors
+      const response = await api.post("/api/todoList", {
+        title: newListTitle.trim(),
+        category: finalCategory,
+        userId: user?._id,
+      });
+
+      if (response.data.success) {
+        setTodoLists((prev) => [...prev, response.data.data]);
+
+        // Reset all form fields
+        setNewListTitle("");
+        setNewListCategory("general");
+        setCustomCategory("");
+        setIsDialogOpen(false);
+
+        navigate(`/todolists/${response.data.data._id}`);
+      }
+    } catch (error: any) {
+      console.error("Error creating todo list:", error);
+      setError(error.response?.data?.message || "Failed to create todo list");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Get existing categories for the select dropdown
+  const existingCategories = [
+    ...new Set(todoLists.map((list) => list.category).filter(Boolean)),
+  ];
+  const categoryOptions = [...existingCategories, "Other"];
 
   // Loading state
   if (loading) {
@@ -181,10 +248,121 @@ function TodoListPage() {
               Organize your tasks into different lists and categories
             </p>
           </div>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New List
-          </Button>
+          {/* New List Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                New List
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Create New Todo List</DialogTitle>
+                <DialogDescription>
+                  Create a new todo list to organize your tasks. Choose a title
+                  and category.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">List Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="Enter list title..."
+                    value={newListTitle}
+                    onChange={(e) => setNewListTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleCreateList();
+                      }
+                    }}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={newListCategory}
+                    onValueChange={setNewListCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {newListCategory === "Other" && (
+                    <div className="grid gap-2 mt-3 p-4 bg-muted/50 rounded-lg border border-dashed">
+                      <Label
+                        htmlFor="customCategory"
+                        className="text-sm font-medium"
+                      >
+                        Custom Category Name
+                      </Label>
+                      <Input
+                        id="customCategory"
+                        type="text"
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        placeholder="e.g. Work, Study, Fitness..."
+                        className="bg-background"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleCreateList();
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Create a custom category to organize your lists
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setNewListTitle("");
+                    setNewListCategory("general");
+                    setCustomCategory("");
+                    setError(""); // Clear any errors
+                  }}
+                  disabled={isCreating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateList}
+                  disabled={
+                    !newListTitle.trim() ||
+                    (newListCategory === "Other" && !customCategory.trim()) ||
+                    isCreating
+                  }
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create List
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search and Filter Bar */}
