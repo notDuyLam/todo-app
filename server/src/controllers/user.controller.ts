@@ -412,19 +412,14 @@ export const deleteUser = async (
       return;
     }
 
-    // Get user's todo lists to delete associated todos
+    // Get counts before deletion for response
     const todoLists = await TodoList.find({ userId: id });
     const todoListIds = todoLists.map((list) => list._id);
-
-    // Delete all todos associated with user's lists
-    const todosDeleted = await Todo.deleteMany({
+    const todoCount = await Todo.countDocuments({
       listId: { $in: todoListIds },
     });
 
-    // Delete all todo lists associated with the user
-    const todoListsDeleted = await TodoList.deleteMany({ userId: id });
-
-    // Delete the user
+    // Delete the user - cascade delete middleware will handle related data
     await User.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -435,8 +430,8 @@ export const deleteUser = async (
           _id: user._id,
           username: user.username,
         },
-        deletedTodoLists: todoListsDeleted.deletedCount,
-        deletedTodos: todosDeleted.deletedCount,
+        deletedTodoLists: todoLists.length,
+        deletedTodos: todoCount,
       },
     });
   } catch (error) {
@@ -479,17 +474,21 @@ export const getUserProfile = async (
     const todoListCount = await TodoList.countDocuments({ userId });
     const todoLists = await TodoList.find({ userId });
     const todoListIds = todoLists.map((list) => list._id);
-    const todoCount = await Todo.countDocuments({
+    const totalTodos = await Todo.countDocuments({
       listId: { $in: todoListIds },
+    });
+    const completedTodos = await Todo.countDocuments({
+      listId: { $in: todoListIds },
+      completed: true,
     });
 
     const userWithStats = {
       ...user.toObject(),
-      stats: {
-        todoListCount,
-        todoCount,
-      },
+      todoListCount,
+      totalTodos,
+      completedTodos,
     };
+    console.log(userWithStats);
 
     res.status(200).json({
       success: true,

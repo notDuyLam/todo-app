@@ -14,7 +14,6 @@ type User = {
   createdAt: string;
   totalTodos: number;
   completedTodos: number;
-  activeLists: number;
   recentActivity: string;
 };
 
