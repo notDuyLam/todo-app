@@ -8,6 +8,7 @@ import {
   updateUser,
   deleteUser,
   getUserProfile,
+  updatePassword,
 } from "../controllers/user.controller";
 import { authenticateJWT } from "../middleware/authMiddleware";
 
@@ -22,6 +23,7 @@ router.post("/logout", logoutUser);
 
 // Protected routes - PUT SPECIFIC ROUTES FIRST
 router.get("/profile", authenticateJWT, getUserProfile); //
+router.put("/:id/password", authenticateJWT, updatePassword);
 router.get("/", getAllUsers);
 router.get("/:id", getUserById); //
 

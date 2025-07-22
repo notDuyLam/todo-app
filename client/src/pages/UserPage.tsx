@@ -37,19 +37,30 @@ import { Navigate } from "react-router-dom";
 type formData = {
   username: string;
   email: string;
-  password: string;
+};
+
+type passwordFormData = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 };
 
 function UserPage() {
   const [formData, setFormData] = useState<formData>({
     username: "",
     email: "",
-    password: "",
+  });
+  const [passwordData, setPasswordData] = useState<passwordFormData>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditPassword, setIsEditPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   const { user, loading, isAuthenticated, logout } = useAuth();
 
@@ -59,7 +70,6 @@ function UserPage() {
       setFormData({
         username: user.username,
         email: user.email,
-        password: "",
       });
     }
   }, [user]);
@@ -96,6 +106,11 @@ function UserPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -106,11 +121,6 @@ function UserPage() {
         username: formData.username,
         email: formData.email,
       };
-
-      // Only include password if it's provided
-      if (formData.password.trim()) {
-        updateData.password = formData.password;
-      }
 
       const res = await api.put(`/api/users/${user?._id}`, updateData);
 
@@ -127,6 +137,53 @@ function UserPage() {
     } catch (error: any) {
       console.error("Error updating profile:", error);
       setMessage(error.response?.data?.message || "Error updating profile.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setPasswordMessage("");
+
+    // Validate passwords match
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage("New passwords do not match.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (passwordData.newPassword.length < 6) {
+      setPasswordMessage("New password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const res = await api.put(`/api/users/${user?._id}/password`, {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      if (res.data.success) {
+        setPasswordMessage("Password updated successfully!");
+        setIsEditPassword(false);
+        // Reset password form
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        setPasswordMessage(res.data.message || "Error updating password.");
+      }
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      setPasswordMessage(
+        error.response?.data?.message || "Error updating password."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -221,19 +278,7 @@ function UserPage() {
                             placeholder="Enter email"
                           />
                         </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="password">
-                            New Password (optional)
-                          </Label>
-                          <Input
-                            id="password"
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleEditUser}
-                            placeholder="Leave blank to keep current password"
-                          />
-                        </div>
+
                         {message && (
                           <div
                             className={`text-sm p-2 rounded ${
@@ -258,7 +303,6 @@ function UserPage() {
                               setFormData({
                                 username: user.username,
                                 email: user.email,
-                                password: "",
                               });
                             }
                           }}
@@ -350,22 +394,43 @@ function UserPage() {
 
               {/* Progress Bar */}
               <div className="pt-2">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-muted-foreground">Completion Rate</span>
-                  <span className="font-medium">
-                    {Math.round((user.completedTodos / user.totalTodos) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${
-                        (user.completedTodos / user.totalTodos) * 100
-                      }%`,
-                    }}
-                  />
-                </div>
+                {user.totalTodos > 0 ? (
+                  <>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">
+                        Completion Rate
+                      </span>
+                      <span className="font-medium">
+                        {Math.round(
+                          (user.completedTodos / user.totalTodos) * 100
+                        )}
+                        %
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${
+                            (user.completedTodos / user.totalTodos) * 100
+                          }%`,
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="mb-2">
+                      <ListTodo className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      No tasks yet
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Create your first todo to start tracking progress
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -382,10 +447,98 @@ function UserPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Edit3 className="h-4 w-4 mr-2" />
-                Change Password
-              </Button>
+              <Dialog open={isEditPassword} onOpenChange={setIsEditPassword}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Change Password
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Change Password</DialogTitle>
+                    <DialogDescription>
+                      Enter your current password and choose a new one.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handlePasswordSubmit}>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="currentPassword">
+                          Current Password
+                        </Label>
+                        <Input
+                          id="currentPassword"
+                          name="currentPassword"
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          placeholder="Enter current password"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          name="newPassword"
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          placeholder="Enter new password (min. 6 characters)"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="confirmPassword">
+                          Confirm New Password
+                        </Label>
+                        <Input
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          placeholder="Confirm new password"
+                          required
+                        />
+                      </div>
+                      {passwordMessage && (
+                        <div
+                          className={`text-sm p-2 rounded ${
+                            passwordMessage.includes("successfully")
+                              ? "bg-green-100 text-green-700 border border-green-200"
+                              : "bg-red-100 text-red-700 border border-red-200"
+                          }`}
+                        >
+                          {passwordMessage}
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditPassword(false);
+                          setPasswordMessage("");
+                          setPasswordData({
+                            currentPassword: "",
+                            newPassword: "",
+                            confirmPassword: "",
+                          });
+                        }}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Updating..." : "Change Password"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
               <Button variant="outline" className="w-full justify-start">
                 <Mail className="h-4 w-4 mr-2" />
                 Update Email
@@ -406,31 +559,51 @@ function UserPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    Completed "Buy groceries"
+              {user.totalTodos > 0 ? (
+                <>
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        Completed "Buy groceries"
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        2 hours ago
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                    <ListTodo className="h-4 w-4 text-blue-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        Created "Weekend Plans"
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        5 hours ago
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        Completed "Finish project"
+                      </p>
+                      <p className="text-xs text-muted-foreground">1 day ago</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-1">
+                    No recent activity
                   </p>
-                  <p className="text-xs text-muted-foreground">2 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
-                <ListTodo className="h-4 w-4 text-blue-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Created "Weekend Plans"</p>
-                  <p className="text-xs text-muted-foreground">5 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    Completed "Finish project"
+                  <p className="text-xs text-muted-foreground">
+                    Start creating todos to see your activity here
                   </p>
-                  <p className="text-xs text-muted-foreground">1 day ago</p>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>

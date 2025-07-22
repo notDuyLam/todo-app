@@ -488,7 +488,6 @@ export const getUserProfile = async (
       totalTodos,
       completedTodos,
     };
-    console.log(userWithStats);
 
     res.status(200).json({
       success: true,
@@ -497,5 +496,81 @@ export const getUserProfile = async (
   } catch (err) {
     console.error("Error in getUserProfile:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * @desc Update user password
+ * @route PUT /api/users/:id/password
+ * @access Private
+ */
+export const updatePassword = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.params.id;
+
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+      return;
+    }
+
+    // Validate new password length
+    if (newPassword.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long",
+      });
+      return;
+    }
+
+    // Check if user exists and explicitly select password field
+    const user = await User.findById(userId).select("+password");
+
+    if (!user || !user.password) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+
+    if (!isCurrentPasswordValid) {
+      res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+      return;
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    await User.findByIdAndUpdate(userId, { password: hashedNewPassword });
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (err) {
+    console.error("Error in updatePassword:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
