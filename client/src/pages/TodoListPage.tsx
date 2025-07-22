@@ -706,10 +706,6 @@ function TodoListPage() {
                     ? `No lists match "${searchTerm}"`
                     : "Get started by creating your first todo list"}
                 </p>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create New List
-                </Button>
               </CardContent>
             </Card>
           )}
