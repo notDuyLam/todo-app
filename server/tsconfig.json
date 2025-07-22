@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ES6", // Chuẩn
-    "module": "commonjs", // Chuẩn cho Node.js
-    "moduleResolution": "node", // Chuẩn
-    "outDir": "./dist", // OK
-    "rootDir": "./", // Nên thêm: chỉ định rõ thư mục gốc code
-    "esModuleInterop": true, // Chuẩn
-    "forceConsistentCasingInFileNames": true, // Tốt: Tránh lỗi phân biệt hoa/thường
-    "strict": true, // Bật strict mode cho code TypeScript chắc chắn hơn
-    "skipLibCheck": true, //  Bỏ qua kiểm tra file trong node_modules cho nhanh build
-    "sourceMap": true // OK
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "noImplicitAny": false,
+    "types": ["node"]
   },
-  "include": ["./**/*.ts"], //  Nên thêm: chỉ build file .ts
-  "exclude": ["node_modules", "dist"] //  Không build thư mục node_modules và dist
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
