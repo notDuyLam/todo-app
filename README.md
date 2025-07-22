@@ -99,27 +99,46 @@ You can add screenshots of:
 6. Mobile responsive views
 -->
 
-**Screenshot placeholders - Please add your screenshots here:**
-
 ### Login & Registration
 
-_[Add screenshot of the login/register interface]_
+_Secure authentication with beautiful, responsive design_
+
+![User Registration Form](docs/images/register.png)
+_Registration form with form validation and error handling_
+
+![User Login Interface](docs/images/login.png)
+_Clean login interface with remember me option_
 
 ### Todo Lists Dashboard
 
-_[Add screenshot of the main dashboard showing multiple todo lists]_
+_Overview of all your todo lists with progress tracking_
+
+![Todo Lists Overview](docs/images/lists.png)
+_Dashboard showing multiple todo lists with categories, progress bars, and completion statistics_
 
 ### Task Management
 
-_[Add screenshot of individual todo list with drag-and-drop functionality]_
+_Individual todo list with drag-and-drop functionality_
+
+![Task Management Interface](docs/images/tasks.png)
+_Todo list view with tasks, completion checkboxes, and filtering options_
 
 ### User Profile
 
-_[Add screenshot of user profile and settings page]_
+_Comprehensive user profile and settings management_
 
-### Dark Theme
+![User Profile Page](docs/images/profile.png)
+_User profile with account settings, password management, and account statistics_
 
-_[Add screenshot showcasing the dark theme]_
+### Light Theme
+
+_Beautiful light theme with consistent design language_
+
+![Light Theme Dashboard](docs/images/light-lists.png)
+_Todo lists in light theme showing clean, modern interface_
+
+![Light Theme Task View](docs/images/light-profile.png)
+_Task management interface in light theme with clear readability_
 
 ## 🚀 Installation
 
