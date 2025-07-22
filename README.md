@@ -132,13 +132,11 @@ _User profile with account settings, password management, and account statistics
 
 ### Light Theme
 
-_Beautiful light theme with consistent design language_
-
-![Light Theme Dashboard](docs/images/light-lists.png)
 _Todo lists in light theme showing clean, modern interface_
+![Light Theme Dashboard](docs/images/light-lists.png)
 
+_User profile interface in light theme with clear readability_
 ![Light Theme Task View](docs/images/light-profile.png)
-_Task management interface in light theme with clear readability_
 
 ## 🚀 Installation
 
