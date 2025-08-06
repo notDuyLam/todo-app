@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import { Todo } from "../models/todo.model";
-import { TodoList } from "../models/todoList.model";
-import mongoose from "mongoose";
+import { TodoService } from "../services";
 
 // Get all todos
 export const getAllTodos = async (
@@ -9,7 +7,7 @@ export const getAllTodos = async (
   res: Response
 ): Promise<void> => {
   try {
-    const todos = await Todo.find().populate("listId", "title");
+    const todos = await TodoService.getAllTodos();
 
     res.status(200).json({
       success: true,
@@ -33,25 +31,7 @@ export const getTodosByListId = async (
   try {
     const { listId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(listId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid list ID",
-      });
-      return;
-    }
-
-    // Check if the todo list exists
-    const todoList = await TodoList.findById(listId);
-    if (!todoList) {
-      res.status(404).json({
-        success: false,
-        message: "Todo list not found",
-      });
-      return;
-    }
-
-    const todos = await Todo.find({ listId }).populate("listId", "title");
+    const todos = await TodoService.getTodosByListId(listId);
 
     res.status(200).json({
       success: true,
@@ -75,23 +55,7 @@ export const getTodoById = async (
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid todo ID",
-      });
-      return;
-    }
-
-    const todo = await Todo.findById(id).populate("listId", "title");
-
-    if (!todo) {
-      res.status(404).json({
-        success: false,
-        message: "Todo not found",
-      });
-      return;
-    }
+    const todo = await TodoService.getTodoById(id);
 
     res.status(200).json({
       success: true,
@@ -114,51 +78,11 @@ export const createTodo = async (
   try {
     const { title, description, dueDate, completed, listId } = req.body;
 
-    // Validate required fields
-    if (!title || !listId) {
-      res.status(400).json({
-        success: false,
-        message: "Title and listId are required",
-      });
-      return;
-    }
-
-    // Validate listId
-    if (!mongoose.Types.ObjectId.isValid(listId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid list ID",
-      });
-      return;
-    }
-
-    // Check if the todo list exists
-    const todoList = await TodoList.findById(listId);
-    if (!todoList) {
-      res.status(404).json({
-        success: false,
-        message: "Todo list not found",
-      });
-      return;
-    }
-
-    const newTodo = new Todo({
-      title,
-      description,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-      completed: completed || false,
-      listId,
-    });
-
-    const savedTodo = await newTodo.save();
-    const populatedTodo = await Todo.findById(savedTodo._id).populate(
-      "listId",
-      "title"
-    );
+    const todo = await TodoService.createTodo({ title, description, dueDate, completed, listId });
 
     res.status(201).json({
       success: true,
-      data: populatedTodo,
+      data: todo,
     });
   } catch (error) {
     res.status(500).json({
@@ -178,33 +102,7 @@ export const updateTodo = async (
     const { id } = req.params;
     const { title, description, dueDate, completed } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid todo ID",
-      });
-      return;
-    }
-
-    const updateData: any = {};
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (dueDate !== undefined)
-      updateData.dueDate = dueDate ? new Date(dueDate) : null;
-    if (completed !== undefined) updateData.completed = completed;
-
-    const updatedTodo = await Todo.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate("listId", "title");
-
-    if (!updatedTodo) {
-      res.status(404).json({
-        success: false,
-        message: "Todo not found",
-      });
-      return;
-    }
+    const updatedTodo = await TodoService.updateTodo(id, { title, description, dueDate, completed });
 
     res.status(200).json({
       success: true,
@@ -227,23 +125,7 @@ export const deleteTodo = async (
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid todo ID",
-      });
-      return;
-    }
-
-    const deletedTodo = await Todo.findByIdAndDelete(id);
-
-    if (!deletedTodo) {
-      res.status(404).json({
-        success: false,
-        message: "Todo not found",
-      });
-      return;
-    }
+    await TodoService.deleteTodo(id);
 
     res.status(200).json({
       success: true,
@@ -266,15 +148,7 @@ export const deleteAllTodosByListId = async (
   try {
     const { listId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(listId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid list ID",
-      });
-      return;
-    }
-
-    const result = await Todo.deleteMany({ listId });
+    const result = await TodoService.deleteAllTodosByListId(listId);
 
     res.status(200).json({
       success: true,

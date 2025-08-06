@@ -1,10 +1,5 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import { User } from "../models/user.model";
-import { Todo } from "../models/todo.model";
-import { TodoList } from "../models/todoList.model";
-import { generateToken } from "../utils/generateTokens";
-import mongoose from "mongoose";
+import { UserService } from "../services";
 import { AuthRequest } from "../middleware/authMiddleware";
 
 /**
@@ -19,64 +14,11 @@ export const registerUser = async (
   try {
     const { username, email, password } = req.body;
 
-    // Validate required fields
-    if (!username || !email || !password) {
-      res.status(400).json({
-        success: false,
-        message: "Username, email, and password are required",
-      });
-      return;
-    }
-
-    // Validate password length
-    if (password.length < 6) {
-      res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters long",
-      });
-      return;
-    }
-
-    // Check if user already exists
-    const userExists = await User.findOne({
-      $or: [{ username }, { email }],
-    });
-
-    if (userExists) {
-      res.status(400).json({
-        success: false,
-        message: "User with that username or email already exists",
-      });
-      return;
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create the user
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    const savedUser = await user.save();
-
-    // Generate token
-    const token = generateToken(
-      (savedUser._id as mongoose.Types.ObjectId).toString()
-    );
+    const userData = await UserService.registerUser({ username, email, password });
 
     res.status(201).json({
       success: true,
-      data: {
-        _id: savedUser._id,
-        username: savedUser.username,
-        email: savedUser.email,
-        createdAt: savedUser.createdAt,
-        token,
-      },
+      data: userData,
       message: "User registered successfully",
     });
   } catch (error) {
@@ -107,51 +49,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, password } = req.body;
 
-    // Validate required fields
-    if (!username || !password) {
-      res.status(400).json({
-        success: false,
-        message: "Username and password are required",
-      });
-      return;
-    }
-
-    // Find user and include password field
-    const user = await User.findOne({ username }).select("+password");
-
-    if (!user || !user.password) {
-      res.status(401).json({
-        success: false,
-        message: "Invalid username or password",
-      });
-      return;
-    }
-
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      res.status(401).json({
-        success: false,
-        message: "Invalid username or password",
-      });
-      return;
-    }
-
-    // Generate token
-    const token = generateToken(
-      (user._id as mongoose.Types.ObjectId).toString()
-    );
+    const userData = await UserService.loginUser({ username, password });
 
     res.status(200).json({
       success: true,
-      data: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        createdAt: user.createdAt,
-        token,
-      },
+      data: userData,
       message: "Login successful",
     });
   } catch (error) {
@@ -189,34 +91,12 @@ export const getAllUsers = async (
   res: Response
 ): Promise<void> => {
   try {
-    const users = await User.find();
-
-    // Get stats for each user
-    const usersWithStats = await Promise.all(
-      users.map(async (user) => {
-        const todoListCount = await TodoList.countDocuments({
-          userId: user._id,
-        });
-        const todoCount = await Todo.countDocuments({
-          listId: {
-            $in: await TodoList.find({ userId: user._id }).distinct("_id"),
-          },
-        });
-
-        return {
-          ...user.toObject(),
-          stats: {
-            todoListCount,
-            todoCount,
-          },
-        };
-      })
-    );
+    const users = await UserService.getAllUsers();
 
     res.status(200).json({
       success: true,
       count: users.length,
-      data: usersWithStats,
+      data: users,
     });
   } catch (error) {
     res.status(500).json({
@@ -239,43 +119,11 @@ export const getUserById = async (
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-      return;
-    }
-
-    const user = await User.findById(id);
-
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    // Get user stats
-    const todoListCount = await TodoList.countDocuments({ userId: id });
-    const todoLists = await TodoList.find({ userId: id });
-    const todoListIds = todoLists.map((list) => list._id);
-    const todoCount = await Todo.countDocuments({
-      listId: { $in: todoListIds },
-    });
-
-    const userWithStats = {
-      ...user.toObject(),
-      stats: {
-        todoListCount,
-        todoCount,
-      },
-    };
+    const user = await UserService.getUserById(id);
 
     res.status(200).json({
       success: true,
-      data: userWithStats,
+      data: user,
     });
   } catch (error) {
     res.status(500).json({
@@ -299,78 +147,11 @@ export const updateUser = async (
     const { id } = req.params;
     const { username, email, password } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-      return;
-    }
-
-    const user = await User.findById(id);
-
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    // Check for duplicate username/email if they're being updated
-    if (username && username !== user.username) {
-      const usernameExists = await User.findOne({ username, _id: { $ne: id } });
-      if (usernameExists) {
-        res.status(400).json({
-          success: false,
-          message: "Username already exists",
-        });
-        return;
-      }
-    }
-
-    if (email && email !== user.email) {
-      const emailExists = await User.findOne({ email, _id: { $ne: id } });
-      if (emailExists) {
-        res.status(400).json({
-          success: false,
-          message: "Email already exists",
-        });
-        return;
-      }
-    }
-
-    // Update fields
-    const updateData: any = {};
-    if (username !== undefined) updateData.username = username;
-    if (email !== undefined) updateData.email = email;
-
-    // Hash new password if provided
-    if (password) {
-      if (password.length < 6) {
-        res.status(400).json({
-          success: false,
-          message: "Password must be at least 6 characters long",
-        });
-        return;
-      }
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(password, salt);
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedUser = await UserService.updateUser(id, { username, email, password });
 
     res.status(200).json({
       success: true,
-      data: {
-        _id: updatedUser!._id,
-        username: updatedUser!.username,
-        email: updatedUser!.email,
-        createdAt: updatedUser!.createdAt,
-      },
+      data: updatedUser,
       message: "User updated successfully",
     });
   } catch (error) {
@@ -394,45 +175,12 @@ export const deleteUser = async (
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-      return;
-    }
-
-    const user = await User.findById(id);
-
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    // Get counts before deletion for response
-    const todoLists = await TodoList.find({ userId: id });
-    const todoListIds = todoLists.map((list) => list._id);
-    const todoCount = await Todo.countDocuments({
-      listId: { $in: todoListIds },
-    });
-
-    // Delete the user - cascade delete middleware will handle related data
-    await User.findByIdAndDelete(id);
+    const result = await UserService.deleteUser(id);
 
     res.status(200).json({
       success: true,
       message: "User and associated data deleted successfully",
-      data: {
-        deletedUser: {
-          _id: user._id,
-          username: user.username,
-        },
-        deletedTodoLists: todoLists.length,
-        deletedTodos: todoCount,
-      },
+      data: result,
     });
   } catch (error) {
     res.status(500).json({
@@ -455,43 +203,11 @@ export const getUserProfile = async (
       return;
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-      return;
-    }
-
-    const user = await User.findById(userId).select("-password");
-
-    if (!user) {
-      res.status(404).json({ success: false, message: "User not found" });
-      return;
-    }
-
-    // Get user stats
-    const todoListCount = await TodoList.countDocuments({ userId });
-    const todoLists = await TodoList.find({ userId });
-    const todoListIds = todoLists.map((list) => list._id);
-    const totalTodos = await Todo.countDocuments({
-      listId: { $in: todoListIds },
-    });
-    const completedTodos = await Todo.countDocuments({
-      listId: { $in: todoListIds },
-      completed: true,
-    });
-
-    const userWithStats = {
-      ...user.toObject(),
-      todoListCount,
-      totalTodos,
-      completedTodos,
-    };
+    const userProfile = await UserService.getUserProfile(userId);
 
     res.status(200).json({
       success: true,
-      data: userWithStats,
+      data: userProfile,
     });
   } catch (err) {
     console.error("Error in getUserProfile:", err);
@@ -512,55 +228,7 @@ export const updatePassword = async (
     const { currentPassword, newPassword } = req.body;
     const userId = req.params.id;
 
-    // Validate required fields
-    if (!currentPassword || !newPassword) {
-      res.status(400).json({
-        success: false,
-        message: "Current password and new password are required",
-      });
-      return;
-    }
-
-    // Validate new password length
-    if (newPassword.length < 6) {
-      res.status(400).json({
-        success: false,
-        message: "New password must be at least 6 characters long",
-      });
-      return;
-    }
-
-    // Check if user exists and explicitly select password field
-    const user = await User.findById(userId).select("+password");
-
-    if (!user || !user.password) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password
-    );
-
-    if (!isCurrentPasswordValid) {
-      res.status(400).json({
-        success: false,
-        message: "Current password is incorrect",
-      });
-      return;
-    }
-
-    // Hash new password
-    const saltRounds = 10;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password
-    await User.findByIdAndUpdate(userId, { password: hashedNewPassword });
+    await UserService.updatePassword(userId, currentPassword, newPassword);
 
     res.status(200).json({
       success: true,

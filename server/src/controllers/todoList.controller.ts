@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
-import { Todo } from "../models/todo.model";
-import { TodoList } from "../models/todoList.model";
-import { User } from "../models/user.model";
-import mongoose from "mongoose";
+import { TodoListService } from "../services";
 
 // Create a new todo list
 export const createTodoList = async (
@@ -12,48 +9,11 @@ export const createTodoList = async (
   try {
     const { userId, category, title } = req.body;
 
-    // Validate required fields
-    if (!title || !userId) {
-      res.status(400).json({
-        success: false,
-        message: "Title and userId are required",
-      });
-      return;
-    }
-
-    // Validate userId format
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-      return;
-    }
-
-    // Check if user exists
-    const user = await User.findById(userId);
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    const newTodoList = new TodoList({
-      title,
-      category,
-      userId,
-    });
-
-    const savedTodoList = await newTodoList.save();
-    const populatedTodoList = await TodoList.findById(
-      savedTodoList._id
-    ).populate("userId", "username email");
+    const todoList = await TodoListService.createTodoList({ userId, category, title });
 
     res.status(201).json({
       success: true,
-      data: populatedTodoList,
+      data: todoList,
     });
   } catch (error) {
     res.status(500).json({
@@ -70,26 +30,12 @@ export const getAllTodoLists = async (
   res: Response
 ): Promise<void> => {
   try {
-    const todoLists = await TodoList.find().populate(
-      "userId",
-      "username email"
-    );
-
-    // Get todos count for each list
-    const todoListsWithCounts = await Promise.all(
-      todoLists.map(async (list) => {
-        const todoCount = await Todo.countDocuments({ listId: list._id });
-        return {
-          ...list.toObject(),
-          todoCount,
-        };
-      })
-    );
+    const todoLists = await TodoListService.getAllTodoLists();
 
     res.status(200).json({
       success: true,
       count: todoLists.length,
-      data: todoListsWithCounts,
+      data: todoLists,
     });
   } catch (error) {
     res.status(500).json({
@@ -108,49 +54,12 @@ export const getTodoListsByUserId = async (
   try {
     const { userId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid user ID",
-      });
-      return;
-    }
-
-    // Check if user exists
-    const user = await User.findById(userId);
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    const todoLists = await TodoList.find({ userId }).populate(
-      "userId",
-      "username email"
-    );
-
-    // Get todos count for each list
-    const todoListsWithCounts = await Promise.all(
-      todoLists.map(async (list) => {
-        const todoCount = await Todo.countDocuments({ listId: list._id });
-        const completedTodos = await Todo.countDocuments({
-          listId: list._id,
-          completed: true,
-        });
-        return {
-          ...list.toObject(),
-          todoCount,
-          completedTodos,
-        };
-      })
-    );
+    const todoLists = await TodoListService.getTodoListsByUserId(userId);
 
     res.status(200).json({
       success: true,
       count: todoLists.length,
-      data: todoListsWithCounts,
+      data: todoLists,
     });
   } catch (error) {
     res.status(500).json({
@@ -169,40 +78,11 @@ export const getTodoListById = async (
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid todo list ID",
-      });
-      return;
-    }
-
-    const todoList = await TodoList.findById(id).populate(
-      "userId",
-      "username email"
-    );
-
-    if (!todoList) {
-      res.status(404).json({
-        success: false,
-        message: "Todo list not found",
-      });
-      return;
-    }
-
-    // Get todos for this list
-    const todos = await Todo.find({ listId: id });
-    const todoCount = todos.length;
-
-    const response = {
-      ...todoList.toObject(),
-      todos,
-      todoCount,
-    };
+    const todoList = await TodoListService.getTodoListById(id);
 
     res.status(200).json({
       success: true,
-      data: response,
+      data: todoList,
     });
   } catch (error) {
     res.status(500).json({
@@ -222,41 +102,11 @@ export const updateTodoList = async (
     const { id } = req.params;
     const { title } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid todo list ID",
-      });
-      return;
-    }
-
-    const updateData: any = {};
-    if (title !== undefined) updateData.title = title;
-
-    const updatedTodoList = await TodoList.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate("userId", "username email");
-
-    if (!updatedTodoList) {
-      res.status(404).json({
-        success: false,
-        message: "Todo list not found",
-      });
-      return;
-    }
-
-    // Get todos count for the list
-    const todoCount = await Todo.countDocuments({ listId: id });
-
-    const response = {
-      ...updatedTodoList.toObject(),
-      todoCount,
-    };
+    const updatedTodoList = await TodoListService.updateTodoList(id, { title });
 
     res.status(200).json({
       success: true,
-      data: response,
+      data: updatedTodoList,
     });
   } catch (error) {
     res.status(500).json({
@@ -275,31 +125,12 @@ export const deleteTodoList = async (
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid todo list ID",
-      });
-      return;
-    }
-
-    const deletedTodoList = await TodoList.findByIdAndDelete(id);
-
-    if (!deletedTodoList) {
-      res.status(404).json({
-        success: false,
-        message: "Todo list not found",
-      });
-      return;
-    }
-
-    // Delete all todos associated with this list
-    const deleteResult = await Todo.deleteMany({ listId: id });
+    const result = await TodoListService.deleteTodoList(id);
 
     res.status(200).json({
       success: true,
       message: "Todo list deleted successfully",
-      deletedTodosCount: deleteResult.deletedCount,
+      deletedTodosCount: result.deletedTodosCount,
     });
   } catch (error) {
     res.status(500).json({
